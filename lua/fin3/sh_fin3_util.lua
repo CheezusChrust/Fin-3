@@ -4,30 +4,11 @@ Fin3.allowedClasses = {
     primitive_airfoil = true
 }
 
-Fin3.airDensity = 1.225 -- kg/m^3
-
 if SERVER then
     Fin3.fins = {}
 end
 
-local function getSortedKeys(tbl)
-    local keys = {}
-
-    for k in pairs(tbl) do
-        keys[#keys + 1] = k
-    end
-
-    table.sort(keys)
-
-    return keys
-end
-
-for _, model in pairs(Fin3.models) do
-    model.liftCurveKeys = getSortedKeys(model.liftCurve)
-    model.dragCurveKeys = getSortedKeys(model.dragCurve)
-end
-
-local function sign(x)
+function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
 
@@ -68,11 +49,11 @@ do
         local absX, absY, absZ = math.abs(v.x), math.abs(v.y), math.abs(v.z)
 
         if absX >= absY and absX >= absZ then
-            return Vector(sign(v.x), 0, 0)
+            return Vector(Fin3.sign(v.x), 0, 0)
         elseif absY >= absX and absY >= absZ then
-            return Vector(0, sign(v.y), 0)
+            return Vector(0, Fin3.sign(v.y), 0)
         else
-            return Vector(0, 0, sign(v.z))
+            return Vector(0, 0, Fin3.sign(v.z))
         end
     end
 

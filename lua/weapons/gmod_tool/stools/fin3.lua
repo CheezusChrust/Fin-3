@@ -36,7 +36,7 @@ if CLIENT then
     language.Add("tool.fin3.forcemul.info", "Calculated lift and drag forces are multiplied by this value. Base lift and drag are determined by the surface area of the fin. 1 is default.")
 
     language.Add("tool.fin3.debug", "Debug")
-    language.Add("tool.fin3.debug.info", "Draws debug information on all fins owned by you.")
+    language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
 end
 
 function TOOL:LeftClick(trace)
@@ -86,7 +86,7 @@ function TOOL:Reload(trace)
     local ent = trace.Entity
     local class = ent:GetClass()
 
-    if SERVER then
+    if SERVER and Fin3.fins[ent] then
         Fin3.fins[ent]:remove()
     end
 
@@ -157,7 +157,7 @@ function TOOL.BuildCPanel(cp)
         finTypeHelperText:SetText("#tool.fin3.fintype." .. finType .. ".info")
     end
 
-    cvars.RemoveChangeCallback("fin3_fintype")
+    cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
     cvars.AddChangeCallback("fin3_fintype", function(_, oldFinType, newFinType)
         if not Fin3.models[newFinType] then
             MsgC(Color(255, 0, 0), "Invalid fin type: ", newFinType, "\n")
@@ -166,7 +166,7 @@ function TOOL.BuildCPanel(cp)
             finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
             finTypeHelperText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
         end
-    end)
+    end, "fin3_fintype_callback")
 
     local forceSlider = vgui.Create("DNumSlider", cp)
     forceSlider:Dock(TOP)

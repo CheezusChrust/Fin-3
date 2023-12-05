@@ -104,6 +104,15 @@ if SERVER then
 
         phys:ApplyTorqueCenter(angf)
     end
+
+    function Fin3.getRotInducedVel(phys, pos)
+        if not IsValid(phys) then return Vector() end
+
+        local p = pos - phys:GetMassCenter()
+        local v = (phys:GetAngleVelocity() * 0.0174533):Cross(p)
+        v = Fin3.localToWorldVector(phys:GetEntity(), v)
+        return v
+    end
 end
 
 if CLIENT then

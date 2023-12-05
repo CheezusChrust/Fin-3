@@ -26,6 +26,8 @@ function Fin3.new(_, ent, data)
 
     fin.liftVector = vector_origin
 
+    fin.lastPos = ent:GetPos()
+
     fin.angleOfAttack = 0
 
     local phys = fin.root:GetPhysicsObject()
@@ -45,11 +47,12 @@ function Fin3.new(_, ent, data)
     fin.phys = phys
 
     function fin:getVelocity()
-        if self.ent ~= self.root then
-            return self.phys:GetVelocityAtPoint(self.ent:GetPos())
-        else
-            return self.phys:GetVelocity()
-        end
+        local curPos = self.ent:GetPos()
+        local vel = (curPos - self.lastPos) / dt
+
+        self.lastPos = curPos
+
+        return vel + Fin3.getRotInducedVel(self.phys, self.ent:WorldToLocal(curPos))
     end
 
     -- Calculates velocity vector, squared velocity, angle of attack, and lift vector
@@ -71,8 +74,6 @@ function Fin3.new(_, ent, data)
         local forwardAndRightVel = self.forwardVel + self.rightVel
         self.fwdVelRatio = self.forwardVel / forwardAndRightVel
 
-        --print(self.fwdVelRatio)
-
         self.velNorm = self.velVector:GetNormalized()
         self.velMsSqr = (self.velVector:Length() / 39.3701) ^ 2
 
@@ -87,9 +88,6 @@ function Fin3.new(_, ent, data)
 
         local side = self.velNorm:Cross(worldUpAxis)
         self.liftVector = self.velNorm:Cross(side)
-        --self.liftVector = self.liftVector * -sign(self.angleOfAttack)
-
-        --print(self.angleOfAttack)
     end
 
     function fin:getLiftForceNewtons()

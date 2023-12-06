@@ -21,6 +21,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
                 local liftVector = sentFin:GetNW2Vector("fin3_liftVector", vector_origin)
                 local dragVector = sentFin:GetNW2Vector("fin3_dragVector", vector_origin)
 
+                if liftVector == vector_origin and dragVector == vector_origin then continue end
+
                 render.SetColorMaterialIgnoreZ()
                 render.DrawBeam(sentFin:GetPos(), sentFin:GetPos() + liftVector / 5, 1, 0, 1, Color(0, 255, 0))
                 render.DrawBeam(sentFin:GetPos(), sentFin:GetPos() + dragVector / 5, 1, 0, 1, Color(255, 0, 0))

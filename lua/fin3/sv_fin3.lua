@@ -159,7 +159,12 @@ function Fin3.new(_, ent, data)
     function fin:think()
         self:calcBaseData()
 
-        if self.velVector == vector_origin then return end
+        if self.velVector == vector_origin then
+            self.ent:SetNW2Vector("fin3_liftVector", vector_origin)
+            self.ent:SetNW2Vector("fin3_dragVector", vector_origin)
+
+            return
+        end
 
         self:calcLiftForceNewtons()
         self:calcDragForceNewtons()

@@ -1,113 +1,116 @@
 Fin3.models = {
-    flat = {
+    flat = { -- https://aviation.stackexchange.com/questions/21391/what-is-the-performance-of-a-flat-plate-wing
         liftCurve = {
-            [0] = 0,
-            [5] = 0.55,
-            [10] = 0.35,
-            [20] = 0.68,
-            [30] = 0.9,
-            [40] = 1.05,
-            [50] = 1,
-            [60] = 0.88,
-            [70] = 0.65,
-            [80] = 0.35,
-            [90] = 0
+            {x = 0, y = 0},
+            {x = 5, y = 0.55},
+            {x = 10, y = 0.35},
+            {x = 20, y = 0.68},
+            {x = 30, y = 0.9},
+            {x = 40, y = 1.05},
+            {x = 50, y = 1},
+            {x = 60, y = 0.88},
+            {x = 70, y = 0.65},
+            {x = 80, y = 0.35},
+            {x = 90, y = 0}
         },
         dragCurve = {
-            [0] = 0.03,
-            [5] = 0.05,
-            [8] = 0.07,
-            [10] = 0.12,
-            [20] = 0.3,
-            [30] = 0.6,
-            [40] = 0.9,
-            [50] = 1.25,
-            [60] = 1.5,
-            [70] = 1.7,
-            [80] = 1.8,
-            [90] = 1.82
+            {x = 0, y = 0.03},
+            {x = 5, y = 0.05},
+            {x = 8, y = 0.07},
+            {x = 10, y = 0.12},
+            {x = 20, y = 0.3},
+            {x = 30, y = 0.6},
+            {x = 40, y = 0.9},
+            {x = 50, y = 1.25},
+            {x = 60, y = 1.5},
+            {x = 70, y = 1.7},
+            {x = 80, y = 1.8},
+            {x = 90, y = 1.82}
         }
     },
 
+    -- https://web.archive.org/web/20041101225159/http://www.prod.sandia.gov/cgi-bin/techlib/access-control.pl/1980/802114.pdf
+    -- "Aerodynamic Characteristics of Seven Symmetrical Airfoil Sections Through 180-Degree Angle of Attack"
     symmetrical = {
         liftCurve = {
-            [0] = 0,
-            [5] = 0.6,
-            [10] = 0.9,
-            [15] = 1.1,
-            [20] = 0.68,
-            [30] = 0.9,
-            [40] = 1.05,
-            [50] = 1,
-            [60] = 0.88,
-            [70] = 0.65,
-            [80] = 0.35,
-            [90] = 0
+            {x = 0, y = 0},
+            {x = 5, y = 0.6},
+            {x = 10, y = 0.9},
+            {x = 15, y = 1.1},
+            {x = 20, y = 0.68},
+            {x = 30, y = 0.9},
+            {x = 40, y = 1.05},
+            {x = 50, y = 1},
+            {x = 60, y = 0.88},
+            {x = 70, y = 0.65},
+            {x = 80, y = 0.35},
+            {x = 90, y = 0}
         },
         dragCurve = {
-            [0] = 0.01,
-            [5] = 0.02,
-            [10] = 0.03,
-            [15] = 0.06,
-            [17] = 0.15,
-            [20] = 0.3,
-            [30] = 0.6,
-            [40] = 0.9,
-            [50] = 1.25,
-            [60] = 1.5,
-            [70] = 1.7,
-            [80] = 1.8,
-            [90] = 1.82
+            {x = 0, y = 0.01},
+            {x = 5, y = 0.02},
+            {x = 10, y = 0.03},
+            {x = 15, y = 0.06},
+            {x = 17, y = 0.15},
+            {x = 20, y = 0.3},
+            {x = 30, y = 0.6},
+            {x = 40, y = 0.9},
+            {x = 50, y = 1.25},
+            {x = 60, y = 1.5},
+            {x = 70, y = 1.7},
+            {x = 80, y = 1.8},
+            {x = 90, y = 1.82}
         },
     },
 
+    -- http://airfoiltools.com/airfoil/details?airfoil=naca4412-il
     cambered = {
         liftCurve = {
-            [-90] = 0,
-            [-75] = -0.83,
-            [-65] = -1.01,
-            [-55] = -1.05,
-            [-45] = -0.9,
-            [-35] = -0.68,
-            [-25] = -0.35,
-            [-15] = -0.55,
-            [-5] = 0,
-            [0] = 0.5,
-            [5] = 1,
-            [10] = 1.4,
-            [17] = 1.6,
-            [23] = 0.8,
-            [30] = 0.9,
-            [40] = 1.05,
-            [50] = 1,
-            [60] = 0.88,
-            [70] = 0.65,
-            [80] = 0.35,
-            [90] = 0
+            {x = -90, y = 0},
+            {x = -75, y = -0.83},
+            {x = -65, y = -1.01},
+            {x = -55, y = -1.05},
+            {x = -45, y = -0.9},
+            {x = -35, y = -0.68},
+            {x = -25, y = -0.35},
+            {x = -15, y = -0.55},
+            {x = -5, y = 0},
+            {x = 0, y = 0.5},
+            {x = 5, y = 1},
+            {x = 10, y = 1.4},
+            {x = 17, y = 1.6},
+            {x = 23, y = 0.8},
+            {x = 30, y = 0.9},
+            {x = 40, y = 1.05},
+            {x = 50, y = 1},
+            {x = 60, y = 0.88},
+            {x = 70, y = 0.65},
+            {x = 80, y = 0.35},
+            {x = 90, y = 0}
         },
         dragCurve = {
-            [-90] = 1.82,
-            [-80] = 1.8,
-            [-70] = 1.65,
-            [-60] = 1.15,
-            [-50] = 0.8,
-            [-40] = 0.5,
-            [-30] = 0.3,
-            [-20] = 0.09,
-            [-15] = 0.04,
-            [-5] = 0.02,
-            [0] = 0.02,
-            [5] = 0.02,
-            [10] = 0.04,
-            [15] = 0.12,
-            [23] = 0.3,
-            [30] = 0.6,
-            [40] = 0.9,
-            [50] = 1.25,
-            [60] = 1.5,
-            [70] = 1.7,
-            [80] = 1.8,
-            [90] = 1.82
+            {x = -90, y = 1.82},
+            {x = -80, y = 1.8},
+            {x = -70, y = 1.65},
+            {x = -60, y = 1.15},
+            {x = -50, y = 0.8},
+            {x = -40, y = 0.5},
+            {x = -30, y = 0.3},
+            {x = -20, y = 0.09},
+            {x = -15, y = 0.04},
+            {x = -5, y = 0.02},
+            {x = 0, y = 0.02},
+            {x = 5, y = 0.02},
+            {x = 10, y = 0.04},
+            {x = 15, y = 0.12},
+            {x = 23, y = 0.3},
+            {x = 30, y = 0.6},
+            {x = 40, y = 0.9},
+            {x = 50, y = 1.25},
+            {x = 60, y = 1.5},
+            {x = 70, y = 1.7},
+            {x = 80, y = 1.8},
+            {x = 90, y = 1.82}
         },
         isCambered = true
     }
@@ -129,23 +132,7 @@ if CLIENT then
     language.Add("tool.fin3.fintype.cambered", "Cambered (NACA 4412)")
     language.Add("tool.fin3.fintype.cambered.info",
         "Cambered airfoils produce a lifting force at 0 AoA, and can resist stalling up to around 15 degrees. " ..
-        "Recommended for the main wing of an aircraft."
+        "Recommended for the main wing of an aircraft.\n" ..
+        "The zero lift angle determines the AoA at which the wing produces no lift.\n(SLIDER CURRENTLY DOES NOTHING)"
     )
-else
-    local function getSortedKeys(tbl)
-        local keys = {}
-
-        for k in pairs(tbl) do
-            keys[#keys + 1] = k
-        end
-
-        table.sort(keys)
-
-        return keys
-    end
-
-    for _, model in pairs(Fin3.models) do
-        model.liftCurveKeys = getSortedKeys(model.liftCurve)
-        model.dragCurveKeys = getSortedKeys(model.dragCurve)
-    end
 end

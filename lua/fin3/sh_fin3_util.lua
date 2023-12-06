@@ -5,37 +5,37 @@ Fin3.allowedClasses = {
 }
 
 if SERVER then
-    Fin3.fins = {}
+    Fin3.fins =  Fin3.fins or {}
 end
 
 function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
 
-function Fin3.calcCurve(keys, points, pos)
-    local count = #keys
+function Fin3.calcCurve(points, pos)
+    local count = #points
 
     if count < 3 then return 0 end
 
-    if pos <= keys[1] then
-        return points[keys[1]]
-    elseif pos >= keys[count] then
-        return points[keys[count]]
+    if pos <= points[1].x then
+        return points[1].y
+    elseif pos >= points[count].x then
+        return points[count].y
     end
 
     local current = 1
     for i = 1, count - 1 do
-        if pos >= keys[i] and pos < keys[i + 1] then
+        if pos >= points[i].x and pos < points[i + 1].x then
             current = i
             break
         end
     end
 
-    local t  = (pos - keys[current]) / (keys[current + 1] - keys[current])
-    local p0 = points[keys[current - 1]] or points[keys[current]]
-    local p1 = points[keys[current]]
-    local p2 = points[keys[current + 1]]
-    local p3 = points[keys[current + 2]] or points[keys[current + 1]]
+    local t  = (pos - points[current].x) / (points[current + 1].x - points[current].x)
+    local p0 = points[current - 1] and points[current - 1].y or points[current].y
+    local p1 = points[current].y
+    local p2 = points[current + 1].y
+    local p3 = points[current + 2] and points[current + 2].y or points[current + 1].y
 
     return 0.5 * ((2 * p1) +
         (p2 - p0) * t +

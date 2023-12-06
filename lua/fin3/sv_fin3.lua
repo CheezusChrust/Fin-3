@@ -1,9 +1,11 @@
-local deg, asin, abs, sign = math.deg, math.asin, math.abs, Fin3.sign
+local deg, asin, abs, sign, pi = math.deg, math.asin, math.abs, Fin3.sign, math.pi
 local localToWorldVector = Fin3.localToWorldVector
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
 local dt = engine.TickInterval()
 Fin3.airDensity = 1.225 -- kg/m^3
+local finEfficiency = 0.9   -- 0.9 is a magic arbitrarily chosen number, sue me
+                            -- Used for calculating induced drag coefficient
 
 function Fin3.new(_, ent, data)
     local fin = {}
@@ -18,6 +20,8 @@ function Fin3.new(_, ent, data)
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
     fin.surfaceArea = abs((obbSize:Dot(fin.forwardAxis) * obbSize:Dot(fin.rightAxis)) * 0.00064516) -- in^2 to m^2
+    fin.aspectRatio = (abs(obbSize:Dot(fin.rightAxis) * 0.0254) ^ 2) / fin.surfaceArea
+    fin.sideAspectRatio = (abs(obbSize:Dot(fin.forwardAxis) * 0.0254) ^ 2) / fin.surfaceArea
 
     fin.velVector = vector_origin
     fin.velNorm = vector_origin
@@ -25,6 +29,9 @@ function Fin3.new(_, ent, data)
     fin.fwdVelRatio = 0
 
     fin.liftVector = vector_origin
+    fin.liftForceNewtons = 0
+    fin.liftInducedDragCoef = 0
+    fin.dragForceNewtons = 0
 
     fin.lastPos = ent:GetPos()
 
@@ -43,6 +50,8 @@ function Fin3.new(_, ent, data)
     ent:SetNW2Vector("fin3_forwardAxis", fin.forwardAxis)
     ent:SetNW2Vector("fin3_rightAxis", fin.rightAxis)
     ent:SetNW2Float("fin3_forceMultiplier", fin.forceMultiplier)
+    ent:SetNW2Float("fin3_surfaceArea", fin.surfaceArea)
+    ent:SetNW2Float("fin3_aspectRatio", fin.aspectRatio)
 
     fin.phys = phys
 
@@ -80,7 +89,7 @@ function Fin3.new(_, ent, data)
         local worldUpAxis = localToWorldVector(self.ent, self.upAxis):GetNormalized()
         local upVelNorm = self.velNorm:Dot(worldUpAxis)
 
-        if abs(upVelNorm) > 0.99 then
+        if abs(upVelNorm) > 0.999 then
             self.angleOfAttack = 90 * sign(upVelNorm)
         else
             self.angleOfAttack = -deg(asin(self.velNorm:Dot(worldUpAxis)))
@@ -90,48 +99,53 @@ function Fin3.new(_, ent, data)
         self.liftVector = self.velNorm:Cross(side)
     end
 
-    function fin:getLiftForceNewtons()
+    function fin:calcLiftForceNewtons()
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local liftCoef = 0
-        local liftCoefFlat = Fin3.calcCurve(flatModel.liftCurveKeys, flatModel.liftCurve, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
+        local liftCoefFlat = Fin3.calcCurve(flatModel.liftCurve, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
+        local fwdVelRatio = 0
 
         if self.forwardVel > 0 then
-            local ratio = self.fwdVelRatio
+            fwdVelRatio = self.fwdVelRatio
             local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local liftCoefForward = -Fin3.calcCurve(curModel.liftCurveKeys, curModel.liftCurve, aoaForModel)
+            local liftCoefForward = -Fin3.calcCurve(curModel.liftCurve, aoaForModel)
 
             if not curModel.isCambered then
                 liftCoefForward = liftCoefForward  * sign(self.angleOfAttack)
             end
 
-            liftCoef = Lerp(ratio, liftCoefFlat, liftCoefForward)
+            liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
         else
             liftCoef = liftCoefFlat
         end
 
-        return 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier
+        -- Cdi = (Cl^2) / (pi * AR * e)
+        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * Lerp(fwdVelRatio, self.sideAspectRatio, self.aspectRatio) * finEfficiency)
+        fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier, dragInduced
     end
 
-    function fin:getDragForceNewtons()
+    function fin:calcDragForceNewtons()
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local dragCoef = 0
-        local dragCoefFlat = Fin3.calcCurve(flatModel.dragCurveKeys, flatModel.dragCurve, abs(self.angleOfAttack))
+        local dragCoefFlat = Fin3.calcCurve(flatModel.dragCurve, abs(self.angleOfAttack))
 
         if self.forwardVel > 0 then
             local ratio = self.fwdVelRatio
             local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local dragCoefForward = Fin3.calcCurve(curModel.dragCurveKeys, curModel.dragCurve, aoaForModel)
+            local dragCoefForward = Fin3.calcCurve(curModel.dragCurve, aoaForModel)
 
             dragCoef = abs((dragCoefForward * ratio) + (dragCoefFlat * (1 - ratio)))
         else
             dragCoef = dragCoefFlat
         end
 
-        return 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier
+        dragCoef = dragCoef + self.liftInducedDragCoef
+
+        fin.dragForceNewtons = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier
     end
 
     function fin:applyForce(force)
@@ -147,10 +161,13 @@ function Fin3.new(_, ent, data)
 
         if self.velVector == vector_origin then return end
 
-        local finalLiftVector = self.liftVector * self:getLiftForceNewtons()
+        self:calcLiftForceNewtons()
+        self:calcDragForceNewtons()
+
+        local finalLiftVector = self.liftVector * self.liftForceNewtons
         self.ent:SetNW2Vector("fin3_liftVector", finalLiftVector)
 
-        local finalDragVector = -self.velNorm * self:getDragForceNewtons()
+        local finalDragVector = -self.velNorm * self.dragForceNewtons
         self.ent:SetNW2Vector("fin3_dragVector", finalDragVector)
 
         local totalForce = finalLiftVector + finalDragVector
@@ -165,6 +182,7 @@ function Fin3.new(_, ent, data)
             self.ent:SetNW2Vector("fin3_forwardAxis", nil)
             self.ent:SetNW2Vector("fin3_rightAxis", nil)
             self.ent:SetNW2Float("fin3_forceMultiplier", nil)
+            self.ent:SetNW2Float("fin3_surfaceArea", nil)
 
             if IsValid(self.phys) then
                 self.phys:EnableDrag(true)

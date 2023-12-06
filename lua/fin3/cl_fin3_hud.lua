@@ -46,6 +46,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
         local setUpAxis = Fin3.localToWorldVector(ent, ent:GetNW2Vector("fin3_upAxis", vector_origin))
         local setForwardAxis = Fin3.localToWorldVector(ent, ent:GetNW2Vector("fin3_forwardAxis", vector_origin))
         local forceMultiplier = ent:GetNW2Float("fin3_forceMultiplier", 0)
+        local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
+        local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
 
         local upAxisIndicated = upAxis
         local forwardAxisIndicated = forwardAxis
@@ -81,7 +83,12 @@ hook.Add("HUDPaint", "fin3_hud", function()
         if finType ~= "" then
             surface.SetFont("Trebuchet18")
             local infoPos = centerPos:ToScreen()
-            local text = string.format("Airfoil Type: %s\nForce Multiplier: %.2fx", language.GetPhrase("tool.fin3.fintype." .. finType), forceMultiplier)
+            local text = string.format("Airfoil Type: %s\nForce Multiplier: %.2fx\nEffective Surface Area: %.2fm^2\nAspect Ratio: %.2f",
+                language.GetPhrase("tool.fin3.fintype." .. finType),
+                forceMultiplier,
+                surfaceArea * forceMultiplier,
+                aspectRatio
+            )
             local textWidth, textHeight = surface.GetTextSize(text)
 
             draw.RoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, Color(0, 0, 0, 230), false, true, true, true)

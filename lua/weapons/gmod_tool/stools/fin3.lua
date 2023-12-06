@@ -5,6 +5,7 @@ if CLIENT then
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_forcemul", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
     CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
+    CreateClientConVar("fin3_zeroliftangle", "2", false, true, "The angle of attack at which the fin produces no lift", 1, 5)
 
     TOOL.Information = {
         {
@@ -31,6 +32,9 @@ if CLIENT then
     )
 
     language.Add("tool.fin3.fintype", "Airfoil Type")
+
+    language.Add("tool.fin3.fintype.specificsettings", "Airfoil-specific Settings:")
+    language.Add("tool.fin3.fintype.specificsettings.zeroliftangle", "Zero Lift Angle")
 
     language.Add("tool.fin3.forcemul", "Force Multiplier")
     language.Add("tool.fin3.forcemul.info", "Calculated lift and drag forces are multiplied by this value. Base lift and drag are determined by the surface area of the fin. 1 is default.")
@@ -129,44 +133,74 @@ function TOOL.BuildCPanel(cp)
         self:SetTall(textHeight + 10)
     end
 
-    local optionsContainer = vgui.Create("DPanel", cp)
-    optionsContainer:Dock(TOP)
-    optionsContainer:DockMargin(10, 10, 10, 0)
-    optionsContainer:SetTall(16)
-    optionsContainer.Paint = function() end
+    do -- Fin type selection and settings
+        local optionsContainer = vgui.Create("DPanel", cp)
+        optionsContainer:Dock(TOP)
+        optionsContainer:DockMargin(10, 10, 10, 0)
+        optionsContainer:SetTall(16)
+        optionsContainer.Paint = function() end
 
-    local optionsLabel = createLabel(optionsContainer, "#tool.fin3.fintype")
-    optionsLabel:Dock(LEFT)
-    optionsLabel:DockMargin(0, 0, 0, 0)
+        local optionsLabel = createLabel(optionsContainer, "#tool.fin3.fintype")
+        optionsLabel:Dock(LEFT)
+        optionsLabel:DockMargin(0, 0, 0, 0)
 
-    local finTypeSelection = vgui.Create("DComboBox", optionsContainer)
-    finTypeSelection:SetValue("#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString())
+        local finTypeSelection = vgui.Create("DComboBox", optionsContainer)
+        finTypeSelection:SetValue("#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString())
 
-    for name in pairs(Fin3.models) do
-        finTypeSelection:AddChoice(string.format("#tool.fin3.fintype.%s", name), name)
-    end
-
-    finTypeSelection:Dock(RIGHT)
-    finTypeSelection:SetWide(160)
-
-    local finTypeHelperText = createLabel(cp, "#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString() .. ".info", "DermaDefault")
-    finTypeHelperText:DockMargin(20, 10, 20, 0)
-
-    function finTypeSelection:OnSelect(_, _, finType)
-        RunConsoleCommand("fin3_fintype", finType)
-        finTypeHelperText:SetText("#tool.fin3.fintype." .. finType .. ".info")
-    end
-
-    cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
-    cvars.AddChangeCallback("fin3_fintype", function(_, oldFinType, newFinType)
-        if not Fin3.models[newFinType] then
-            MsgC(Color(255, 0, 0), "Invalid fin type: ", newFinType, "\n")
-            RunConsoleCommand("fin3_fintype", oldFinType)
-        else
-            finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
-            finTypeHelperText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
+        for name in pairs(Fin3.models) do
+            finTypeSelection:AddChoice(string.format("#tool.fin3.fintype.%s", name), name)
         end
-    end, "fin3_fintype_callback")
+
+        finTypeSelection:Dock(RIGHT)
+        finTypeSelection:SetWide(160)
+
+        local finTypeHelperText = createLabel(cp, "#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString() .. ".info", "DermaDefault")
+        finTypeHelperText:DockMargin(20, 10, 20, 0)
+
+        local camberedWingSettingsContainer = vgui.Create("DPanel", cp)
+        camberedWingSettingsContainer:Dock(TOP)
+        camberedWingSettingsContainer:DockMargin(10, 10, 10, 0)
+        camberedWingSettingsContainer:SetTall(48)
+
+        createLabel(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings", "fin3_labeltext"):DockMargin(5, 5, 5, 0)
+
+        local zeroLiftAngleSlider = vgui.Create("DNumSlider", camberedWingSettingsContainer)
+        zeroLiftAngleSlider:Dock(TOP)
+        zeroLiftAngleSlider.Label:SetColor(Color(0, 0, 0))
+        zeroLiftAngleSlider.Label:SetFont("fin3_labeltext")
+        zeroLiftAngleSlider:DockMargin(5, -5, 5, 0)
+        zeroLiftAngleSlider:SetText("#tool.fin3.fintype.specificsettings.zeroliftangle")
+        zeroLiftAngleSlider:SetMin(1)
+        zeroLiftAngleSlider:SetMax(5)
+        zeroLiftAngleSlider:SetDecimals(1)
+        zeroLiftAngleSlider:SetValue(GetConVar("fin3_zeroliftangle"):GetFloat())
+        zeroLiftAngleSlider:SetConVar("fin3_zeroliftangle")
+
+        local function showCamberedWingSettings(show)
+            camberedWingSettingsContainer:SetVisible(show)
+            cp:InvalidateLayout()
+        end
+
+        function finTypeSelection:OnSelect(_, _, finType)
+            RunConsoleCommand("fin3_fintype", finType)
+            finTypeHelperText:SetText("#tool.fin3.fintype." .. finType .. ".info")
+
+            showCamberedWingSettings(finType == "cambered")
+        end
+
+        cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
+        cvars.AddChangeCallback("fin3_fintype", function(_, oldFinType, newFinType)
+            if not Fin3.models[newFinType] then
+                MsgC(Color(255, 0, 0), "Invalid fin type: ", newFinType, "\n")
+                RunConsoleCommand("fin3_fintype", oldFinType)
+            else
+                finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
+                finTypeHelperText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
+
+                showCamberedWingSettings(newFinType == "cambered")
+            end
+        end, "fin3_fintype_callback")
+    end
 
     local forceSlider = vgui.Create("DNumSlider", cp)
     forceSlider:Dock(TOP)
@@ -194,4 +228,6 @@ function TOOL.BuildCPanel(cp)
 
     local debugCheckboxInfo = createLabel(cp, "#tool.fin3.debug.info", "DermaDefault")
     debugCheckboxInfo:DockMargin(20, 10, 20, 0)
+
+    cp:InvalidateLayout()
 end

@@ -11,6 +11,7 @@ function Fin3.new(_, ent, data)
     local fin = {}
 
     fin.ent = ent
+    fin.massCenter = ent:GetPhysicsObject():GetMassCenter()
     fin.upAxis = data.upAxis
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
@@ -149,11 +150,7 @@ function Fin3.new(_, ent, data)
     end
 
     function fin:applyForce(force)
-        if self.ent ~= self.root then
-            applyForceOffsetFixed(self.phys, force, self.ent:GetPos())
-        else
-            applyForceOffsetFixed(self.phys, force, self.root:GetPos())
-        end
+        applyForceOffsetFixed(self.phys, force, self.ent:LocalToWorld(self.massCenter))
     end
 
     function fin:think()

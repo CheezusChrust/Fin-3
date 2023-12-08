@@ -104,14 +104,14 @@ function Fin3.new(_, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local liftCoef = 0
-        local liftCoefFlat = Fin3.calcCurve(flatModel.curves.drag, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
+        local liftCoefFlat = Fin3.calcCurve(flatModel.curves.lift, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
         local fwdVelRatio = 0
 
         if self.forwardVel > 0 then
             fwdVelRatio = self.fwdVelRatio
             local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local liftCoefForward = -Fin3.calcCurve(curModel.curves.drag, aoaForModel)
+            local liftCoefForward = -Fin3.calcCurve(curModel.curves.lift, aoaForModel)
 
             if not curModel.isCambered then
                 liftCoefForward = liftCoefForward  * sign(self.angleOfAttack)

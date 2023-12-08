@@ -104,14 +104,14 @@ function Fin3.new(_, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local liftCoef = 0
-        local liftCoefFlat = Fin3.calcCurve(flatModel.liftCurve, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
+        local liftCoefFlat = Fin3.calcCurve(flatModel.curves.drag, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
         local fwdVelRatio = 0
 
         if self.forwardVel > 0 then
             fwdVelRatio = self.fwdVelRatio
             local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local liftCoefForward = -Fin3.calcCurve(curModel.liftCurve, aoaForModel)
+            local liftCoefForward = -Fin3.calcCurve(curModel.curves.drag, aoaForModel)
 
             if not curModel.isCambered then
                 liftCoefForward = liftCoefForward  * sign(self.angleOfAttack)
@@ -131,13 +131,13 @@ function Fin3.new(_, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local dragCoef = 0
-        local dragCoefFlat = Fin3.calcCurve(flatModel.dragCurve, abs(self.angleOfAttack))
+        local dragCoefFlat = Fin3.calcCurve(flatModel.curves.drag, abs(self.angleOfAttack))
 
         if self.forwardVel > 0 then
             local ratio = self.fwdVelRatio
             local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local dragCoefForward = Fin3.calcCurve(curModel.dragCurve, aoaForModel)
+            local dragCoefForward = Fin3.calcCurve(curModel.curves.drag, aoaForModel)
 
             dragCoef = abs((dragCoefForward * ratio) + (dragCoefFlat * (1 - ratio)))
         else

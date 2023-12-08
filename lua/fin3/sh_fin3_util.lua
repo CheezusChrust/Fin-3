@@ -23,13 +23,18 @@ function Fin3.calcCurve(points, pos)
         return points[count].y
     end
 
-    local current = 1
-    for i = 1, count - 1 do
-        if pos >= points[i].x and pos < points[i + 1].x then
-            current = i
-            break
+    -- Binary search to find the interval - 3x faster than previous method but still not great
+    local left, right = 1, count
+    while left + 1 < right do
+        local mid = math.floor((left + right) / 2)
+        if pos < points[mid].x then
+            right = mid
+        else
+            left = mid
         end
     end
+
+    local current = left
 
     local t  = (pos - points[current].x) / (points[current + 1].x - points[current].x)
     local p0 = points[current - 1] and points[current - 1].y or points[current].y

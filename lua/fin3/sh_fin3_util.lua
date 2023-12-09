@@ -1,7 +1,9 @@
+local floor, ceil, abs = math.floor, math.ceil, math.abs
+
 Fin3.allowedClasses = {
     prop_physics = true,
-    primitive_shape = true,
-    primitive_airfoil = true
+    --primitive_shape = true,
+    --primitive_airfoil = true
 }
 
 if SERVER then
@@ -12,7 +14,7 @@ function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
 
-function Fin3.calcCurve(points, pos)
+function Fin3.calcCatRomSpline(points, pos)
     local count = #points
 
     if count < 3 then return 0 end
@@ -23,7 +25,6 @@ function Fin3.calcCurve(points, pos)
         return points[count].y
     end
 
-    -- Binary search to find the interval - 3x faster than previous method but still not great
     local left, right = 1, count
     while left + 1 < right do
         local mid = math.floor((left + right) / 2)
@@ -48,10 +49,40 @@ function Fin3.calcCurve(points, pos)
         (3 * p1 - p0 - 3 * p2 + p3) * t ^ 3)
 end
 
+for _, model in pairs(Fin3.models) do
+    if not model.interpolatedCurves then
+        model.interpolatedCurves = {}
+    end
+
+    for curveType, curveData in pairs(model.curves) do
+        local interpolated = {}
+
+        for i = -90, 90 do
+            if model.isCambered then
+                interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, i)
+            else
+                local curveSign = (curveType == "lift" and Fin3.sign(i) or 1)
+                interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, abs(i)) * curveSign
+            end
+        end
+
+        model.interpolatedCurves[curveType] = interpolated
+    end
+end
+
+function Fin3.calcLinearInterp(points, pos)
+    local curValue = points[floor(pos)] or points[1]
+    local nextValue = points[ceil(pos)] or points[#points]
+
+    local perc = pos % 1
+
+    return Lerp(perc, curValue, nextValue)
+end
+
 -- Vector functions
 do
     function Fin3.roundVectorToAxis(v)
-        local absX, absY, absZ = math.abs(v.x), math.abs(v.y), math.abs(v.z)
+        local absX, absY, absZ = abs(v.x), abs(v.y), abs(v.z)
 
         if absX >= absY and absX >= absZ then
             return Vector(Fin3.sign(v.x), 0, 0)

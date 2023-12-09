@@ -97,25 +97,20 @@ function Fin3.new(_, ent, data)
         end
 
         local side = self.velNorm:Cross(worldUpAxis)
-        self.liftVector = self.velNorm:Cross(side)
+        self.liftVector = -self.velNorm:Cross(side)
     end
 
     function fin:calcLiftForceNewtons()
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local liftCoef = 0
-        local liftCoefFlat = Fin3.calcCurve(flatModel.curves.lift, abs(self.angleOfAttack))  * -sign(self.angleOfAttack)
+        local liftCoefFlat = Fin3.calcLinearInterp(flatModel.interpolatedCurves.lift, self.angleOfAttack + 91)
         local fwdVelRatio = 0
 
-        if self.forwardVel > 0 then
+        if self.forwardVel > 0 and self.finType ~= "flat" then
             fwdVelRatio = self.fwdVelRatio
-            local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
 
-            local liftCoefForward = -Fin3.calcCurve(curModel.curves.lift, aoaForModel)
-
-            if not curModel.isCambered then
-                liftCoefForward = liftCoefForward  * sign(self.angleOfAttack)
-            end
+            local liftCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.lift, self.angleOfAttack + 91)
 
             liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
         else
@@ -131,15 +126,14 @@ function Fin3.new(_, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local dragCoef = 0
-        local dragCoefFlat = Fin3.calcCurve(flatModel.curves.drag, abs(self.angleOfAttack))
+        local dragCoefFlat = Fin3.calcLinearInterp(flatModel.interpolatedCurves.drag, self.angleOfAttack + 91)
 
-        if self.forwardVel > 0 then
-            local ratio = self.fwdVelRatio
-            local aoaForModel = curModel.isCambered and self.angleOfAttack or abs(self.angleOfAttack)
+        if self.forwardVel > 0 and self.finType ~= "flat" then
+            local fwdVelRatio = self.fwdVelRatio
 
-            local dragCoefForward = Fin3.calcCurve(curModel.curves.drag, aoaForModel)
+            local dragCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.drag, self.angleOfAttack + 91)
 
-            dragCoef = abs((dragCoefForward * ratio) + (dragCoefFlat * (1 - ratio)))
+            dragCoef = abs((dragCoefForward * fwdVelRatio) + (dragCoefFlat * (1 - fwdVelRatio)))
         else
             dragCoef = dragCoefFlat
         end

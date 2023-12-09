@@ -20,9 +20,13 @@ function Fin3.new(_, ent, data)
     fin.finType = data.finType
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
-    fin.surfaceArea = abs((obbSize:Dot(fin.forwardAxis) * obbSize:Dot(fin.rightAxis)) * 0.00064516) -- in^2 to m^2
-    fin.aspectRatio = (abs(obbSize:Dot(fin.rightAxis) * 0.0254) ^ 2) / fin.surfaceArea
-    fin.sideAspectRatio = (abs(obbSize:Dot(fin.forwardAxis) * 0.0254) ^ 2) / fin.surfaceArea
+
+    local span = abs(obbSize:Dot(fin.rightAxis))
+    local chord = abs(obbSize:Dot(fin.forwardAxis))
+
+    fin.surfaceArea = span * chord * 0.00064516 -- in^2 to m^2
+    fin.aspectRatio = span / chord
+    fin.invAspectRatio = 1 / fin.aspectRatio
 
     fin.velVector = vector_origin
     fin.velNorm = vector_origin
@@ -118,7 +122,8 @@ function Fin3.new(_, ent, data)
         end
 
         -- Cdi = (Cl^2) / (pi * AR * e)
-        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * Lerp(fwdVelRatio, self.sideAspectRatio, self.aspectRatio) * finEfficiency)
+        local aspectRatio = Lerp(fwdVelRatio, self.invAspectRatio, self.aspectRatio) 
+        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * finEfficiency)
         fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency, dragInduced
     end
 

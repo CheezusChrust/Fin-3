@@ -16,7 +16,7 @@ function Fin3.new(_, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.root = getRootParent(ent)
-    fin.forceMultiplier = data.forceMultiplier
+    fin.efficiency = data.efficiency
     fin.finType = data.finType
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
@@ -50,7 +50,7 @@ function Fin3.new(_, ent, data)
     ent:SetNW2Vector("fin3_upAxis", fin.upAxis)
     ent:SetNW2Vector("fin3_forwardAxis", fin.forwardAxis)
     ent:SetNW2Vector("fin3_rightAxis", fin.rightAxis)
-    ent:SetNW2Float("fin3_forceMultiplier", fin.forceMultiplier)
+    ent:SetNW2Float("fin3_efficiency", fin.efficiency)
     ent:SetNW2Float("fin3_surfaceArea", fin.surfaceArea)
     ent:SetNW2Float("fin3_aspectRatio", fin.aspectRatio)
 
@@ -119,7 +119,7 @@ function Fin3.new(_, ent, data)
 
         -- Cdi = (Cl^2) / (pi * AR * e)
         fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * Lerp(fwdVelRatio, self.sideAspectRatio, self.aspectRatio) * finEfficiency)
-        fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier, dragInduced
+        fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency, dragInduced
     end
 
     function fin:calcDragForceNewtons()
@@ -140,7 +140,7 @@ function Fin3.new(_, ent, data)
 
         dragCoef = dragCoef + self.liftInducedDragCoef
 
-        fin.dragForceNewtons = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.forceMultiplier
+        fin.dragForceNewtons = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
     end
 
     function fin:applyForce(force)
@@ -177,7 +177,7 @@ function Fin3.new(_, ent, data)
             self.ent:SetNW2Vector("fin3_upAxis", nil)
             self.ent:SetNW2Vector("fin3_forwardAxis", nil)
             self.ent:SetNW2Vector("fin3_rightAxis", nil)
-            self.ent:SetNW2Float("fin3_forceMultiplier", nil)
+            self.ent:SetNW2Float("fin3_efficiency", nil)
             self.ent:SetNW2Float("fin3_surfaceArea", nil)
 
             if IsValid(self.phys) then

@@ -3,7 +3,7 @@ TOOL.Name = "#tool.fin3.name"
 
 if CLIENT then
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
-    CreateClientConVar("fin3_forcemul", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
+    CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
     CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
     CreateClientConVar("fin3_zeroliftangle", "2", false, true, "The angle of attack at which the fin produces no lift", 1, 5)
 
@@ -36,8 +36,11 @@ if CLIENT then
     language.Add("tool.fin3.fintype.specificsettings", "Airfoil-specific Settings:")
     language.Add("tool.fin3.fintype.specificsettings.zeroliftangle", "Zero Lift Angle")
 
-    language.Add("tool.fin3.forcemul", "Force Multiplier")
-    language.Add("tool.fin3.forcemul.info", "Calculated lift and drag forces are multiplied by this value. Base lift and drag are determined by the surface area of the fin. 1 is default.")
+    language.Add("tool.fin3.efficiency", "Efficiency")
+    language.Add("tool.fin3.efficiency.info",
+        "Calculated lift and drag forces are multiplied by this value. " ..
+        "Base lift and drag are determined by the surface area of the fin. 1 is default, and is the most realistic."
+    )
 
     language.Add("tool.fin3.debug", "Debug")
     language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
@@ -61,7 +64,7 @@ function TOOL:LeftClick(trace)
         upAxis = upAxis,
         forwardAxis = forwardAxis,
         finType = ply:GetInfo("fin3_fintype"),
-        forceMultiplier = ply:GetInfoNum("fin3_forcemul", 1)
+        efficiency = ply:GetInfoNum("fin3_efficiency", 1)
     })
 
     return true
@@ -80,7 +83,7 @@ function TOOL:RightClick(trace)
     if fin then
         local ply = self:GetOwner()
         ply:ConCommand("fin3_fintype " .. fin.finType)
-        ply:ConCommand("fin3_forcemul " .. fin.forceMultiplier)
+        ply:ConCommand("fin3_efficiency " .. fin.efficiency)
     end
 
     return Fin3.allowedClasses[class]
@@ -207,14 +210,14 @@ function TOOL.BuildCPanel(cp)
     forceSlider.Label:SetColor(Color(0, 0, 0))
     forceSlider.Label:SetFont("fin3_labeltext")
     forceSlider:DockMargin(10, 10, 10, 0)
-    forceSlider:SetText("#tool.fin3.forcemul")
+    forceSlider:SetText("#tool.fin3.efficiency")
     forceSlider:SetMin(0.1)
     forceSlider:SetMax(1.5)
     forceSlider:SetDecimals(2)
-    forceSlider:SetValue(GetConVar("fin3_forcemul"):GetFloat())
-    forceSlider:SetConVar("fin3_forcemul")
+    forceSlider:SetValue(GetConVar("fin3_efficiency"):GetFloat())
+    forceSlider:SetConVar("fin3_efficiency")
 
-    local forceInfo = createLabel(cp, "#tool.fin3.forcemul.info", "DermaDefault")
+    local forceInfo = createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault")
     forceInfo:DockMargin(20, 0, 20, 10)
 
     local debugCheckbox = vgui.Create("DCheckBoxLabel", cp)

@@ -1,5 +1,6 @@
 Fin3.models = {
-    flat = { -- https://aviation.stackexchange.com/questions/21391/what-is-the-performance-of-a-flat-plate-wing
+    -- https://aviation.stackexchange.com/questions/21391/what-is-the-performance-of-a-flat-plate-wing
+    flat = {
         curves = {
             lift = {
                 {x = 0, y = 0},
@@ -121,6 +122,8 @@ Fin3.models = {
         isCambered = true
     }
 }
+
+if Fin3.createInterpolatedCurves then Fin3.createInterpolatedCurves() end
 
 if CLIENT then
     language.Add("tool.fin3.fintype.flat", "Flat Plate")

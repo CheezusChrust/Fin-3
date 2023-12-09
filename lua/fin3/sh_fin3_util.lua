@@ -49,26 +49,30 @@ function Fin3.calcCatRomSpline(points, pos)
         (3 * p1 - p0 - 3 * p2 + p3) * t ^ 3)
 end
 
-for _, model in pairs(Fin3.models) do
-    if not model.interpolatedCurves then
-        model.interpolatedCurves = {}
-    end
-
-    for curveType, curveData in pairs(model.curves) do
-        local interpolated = {}
-
-        for i = -90, 90 do
-            if model.isCambered then
-                interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, i)
-            else
-                local curveSign = (curveType == "lift" and Fin3.sign(i) or 1)
-                interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, abs(i)) * curveSign
-            end
+function Fin3.createInterpolatedCurves()
+    for _, model in pairs(Fin3.models) do
+        if not model.interpolatedCurves then
+            model.interpolatedCurves = {}
         end
 
-        model.interpolatedCurves[curveType] = interpolated
+        for curveType, curveData in pairs(model.curves) do
+            local interpolated = {}
+
+            for i = -90, 90 do
+                if model.isCambered then
+                    interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, i)
+                else
+                    local curveSign = (curveType == "lift" and Fin3.sign(i) or 1)
+                    interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, abs(i)) * curveSign
+                end
+            end
+
+            model.interpolatedCurves[curveType] = interpolated
+        end
     end
 end
+
+Fin3.createInterpolatedCurves()
 
 function Fin3.calcLinearInterp(points, pos)
     local curValue = points[floor(pos)] or points[1]

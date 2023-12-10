@@ -3,9 +3,6 @@ local localToWorldVector = Fin3.localToWorldVector
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
 local dt = engine.TickInterval()
-Fin3.airDensity = 1.225 -- kg/m^3
-local finEfficiency = 0.9   -- 0.9 is a magic arbitrarily chosen number, sue me
-                            -- Used for calculating induced drag coefficient
 
 function Fin3.new(_, ent, data)
     local fin = {}
@@ -122,8 +119,8 @@ function Fin3.new(_, ent, data)
         end
 
         -- Cdi = (Cl^2) / (pi * AR * e)
-        local aspectRatio = Lerp(fwdVelRatio, self.invAspectRatio, self.aspectRatio) 
-        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * finEfficiency)
+        local aspectRatio = Lerp(fwdVelRatio, self.invAspectRatio, self.aspectRatio)
+        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * Fin3.finEfficiency)
         fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency, dragInduced
     end
 

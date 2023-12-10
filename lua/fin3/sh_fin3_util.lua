@@ -1,15 +1,5 @@
 local floor, ceil, abs = math.floor, math.ceil, math.abs
 
-Fin3.allowedClasses = {
-    prop_physics = true,
-    --primitive_shape = true,
-    --primitive_airfoil = true
-}
-
-if SERVER then
-    Fin3.fins =  Fin3.fins or {}
-end
-
 function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
@@ -153,18 +143,4 @@ if SERVER then
         v = Fin3.localToWorldVector(phys:GetEntity(), v)
         return v
     end
-end
-
-if CLIENT then
-    surface.CreateFont("fin3_bigtext", {
-        font = "Roboto",
-        size = 24,
-        weight = 850
-    })
-
-    surface.CreateFont("fin3_labeltext", {
-        font = "Roboto",
-        size = 16,
-        weight = 550
-    })
 end

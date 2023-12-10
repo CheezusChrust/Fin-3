@@ -2,11 +2,6 @@ TOOL.Category = "Construction"
 TOOL.Name = "#tool.fin3.name"
 
 if CLIENT then
-    CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
-    CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
-    CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
-    CreateClientConVar("fin3_zeroliftangle", "2", false, true, "The angle of attack at which the fin produces no lift", 1, 5)
-
     TOOL.Information = {
         {
             name = "left"

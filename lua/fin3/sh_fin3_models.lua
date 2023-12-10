@@ -132,13 +132,13 @@ if CLIENT then
         "Generally not recommended for most aircraft as flat plates have poor flight characteristics."
     )
 
-    language.Add("tool.fin3.fintype.symmetrical", "Symmetrical (NACA 0015)")
+    language.Add("tool.fin3.fintype.symmetrical", "Symmetrical")
     language.Add("tool.fin3.fintype.symmetrical.info",
         "Symmetrical airfoils do not produce lift at 0 AoA, and can resist stalling up to around 15 degrees. " ..
         "Recommended for any non-lifting fins such as control surfaces."
     )
 
-    language.Add("tool.fin3.fintype.cambered", "Cambered (NACA 4412)")
+    language.Add("tool.fin3.fintype.cambered", "Cambered")
     language.Add("tool.fin3.fintype.cambered.info",
         "Cambered airfoils produce a lifting force at 0 AoA, and can resist stalling up to around 15 degrees. " ..
         "Recommended for the main wing of an aircraft.\n" ..

@@ -15,6 +15,7 @@ function Fin3.new(_, ent, data)
     fin.root = getRootParent(ent)
     fin.efficiency = data.efficiency
     fin.finType = data.finType
+    fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or data.inducedDrag
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
 
@@ -119,9 +120,12 @@ function Fin3.new(_, ent, data)
         end
 
         -- Cdi = (Cl^2) / (pi * AR * e)
-        local aspectRatio = Lerp(fwdVelRatio, self.invAspectRatio, self.aspectRatio)
-        fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * Fin3.finEfficiency)
-        fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency, dragInduced
+        if self.inducedDrag then
+            local aspectRatio = Lerp(fwdVelRatio, self.invAspectRatio, self.aspectRatio)
+            fin.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * Fin3.finEfficiency)
+        end
+
+        fin.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
     end
 
     function fin:calcDragForceNewtons()

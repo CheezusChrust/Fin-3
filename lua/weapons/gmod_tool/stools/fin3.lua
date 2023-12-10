@@ -21,7 +21,7 @@ if CLIENT then
     language.Add("tool.fin3.reload", "Remove fin from prop")
 
     language.Add("tool.fin3.info",
-        "Important Info:\n" ..
+        "Important Info!\n" ..
         "\"Angle of Attack\", or AoA, refers to the angle of the fin compared to the angle of the airflow.\n\n" ..
         "If the AoA is too high, the fin will begin to stall, and subsequently lose lift and gain drag."
     )
@@ -37,8 +37,16 @@ if CLIENT then
         "Base lift and drag are determined by the surface area of the fin. 1 is default, and is the most realistic."
     )
 
+    language.Add("tool.fin3.induceddrag", "Induced Drag")
+    language.Add("tool.fin3.induceddrag.info",
+        "Induced drag is a byproduct of lift, and should generally be enabled for aircraft. " ..
+        "Fins with a higher aspect ratio (span/chord) will have less induced drag. " ..
+        "Server operators can forcibly enable this setting."
+    )
+
     language.Add("tool.fin3.debug", "Debug")
     language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
+    language.Add("tool.fin3.debug.options", "Debug-specific options:")
 end
 
 function TOOL:LeftClick(trace)
@@ -59,7 +67,8 @@ function TOOL:LeftClick(trace)
         upAxis = upAxis,
         forwardAxis = forwardAxis,
         finType = ply:GetInfo("fin3_fintype"),
-        efficiency = ply:GetInfoNum("fin3_efficiency", 1)
+        efficiency = ply:GetInfoNum("fin3_efficiency", 1),
+        inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
     })
 
     return true
@@ -79,6 +88,7 @@ function TOOL:RightClick(trace)
         local ply = self:GetOwner()
         ply:ConCommand("fin3_fintype " .. fin.finType)
         ply:ConCommand("fin3_efficiency " .. fin.efficiency)
+        ply:ConCommand("fin3_induceddrag " .. (fin.inducedDrag and 1 or 0))
     end
 
     return Fin3.allowedClasses[class]
@@ -112,6 +122,33 @@ local function createLabel(parent, text, font)
     return label
 end
 
+local function createSlider(parent, text, min, max, decimals, convar)
+    local slider = vgui.Create("DNumSlider", parent)
+    slider:Dock(TOP)
+    slider.Label:SetColor(Color(0, 0, 0))
+    slider.Label:SetFont("fin3_labeltext")
+    slider:DockMargin(10, 10, 10, 0)
+    slider:SetText(text)
+    slider:SetMin(min)
+    slider:SetMax(max)
+    slider:SetDecimals(decimals)
+    slider:SetConVar(convar)
+
+    return slider
+end
+
+local function createCheckbox(parent, text, convar)
+    local checkbox = vgui.Create("DCheckBoxLabel", parent)
+    checkbox:Dock(TOP)
+    checkbox:DockMargin(10, 10, 10, 0)
+    checkbox:SetText(text)
+    checkbox.Label:SetFont("fin3_labeltext")
+    checkbox.Label:SetColor(Color(0, 0, 0))
+    checkbox:SetConVar(convar)
+
+    return checkbox
+end
+
 function TOOL.BuildCPanel(cp)
     createLabel(cp, "#tool.fin3.desc", "fin3_bigtext")
 
@@ -132,17 +169,17 @@ function TOOL.BuildCPanel(cp)
     end
 
     do -- Fin type selection and settings
-        local optionsContainer = vgui.Create("DPanel", cp)
-        optionsContainer:Dock(TOP)
-        optionsContainer:DockMargin(10, 10, 10, 0)
-        optionsContainer:SetTall(16)
-        optionsContainer.Paint = function() end
+        local optionsDropdownContainer = vgui.Create("DPanel", cp)
+        optionsDropdownContainer:Dock(TOP)
+        optionsDropdownContainer:DockMargin(10, 10, 10, 0)
+        optionsDropdownContainer:SetTall(16)
+        optionsDropdownContainer.Paint = function() end
 
-        local optionsLabel = createLabel(optionsContainer, "#tool.fin3.fintype")
+        local optionsLabel = createLabel(optionsDropdownContainer, "#tool.fin3.fintype")
         optionsLabel:Dock(LEFT)
         optionsLabel:DockMargin(0, 0, 0, 0)
 
-        local finTypeSelection = vgui.Create("DComboBox", optionsContainer)
+        local finTypeSelection = vgui.Create("DComboBox", optionsDropdownContainer)
         finTypeSelection:SetValue("#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString())
 
         for name in pairs(Fin3.models) do
@@ -157,22 +194,11 @@ function TOOL.BuildCPanel(cp)
 
         local camberedWingSettingsContainer = vgui.Create("DPanel", cp)
         camberedWingSettingsContainer:Dock(TOP)
-        camberedWingSettingsContainer:DockMargin(10, 10, 10, 0)
+        camberedWingSettingsContainer:DockMargin(20, 10, 20, 0)
         camberedWingSettingsContainer:SetTall(48)
 
         createLabel(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings", "fin3_labeltext"):DockMargin(5, 5, 5, 0)
-
-        local zeroLiftAngleSlider = vgui.Create("DNumSlider", camberedWingSettingsContainer)
-        zeroLiftAngleSlider:Dock(TOP)
-        zeroLiftAngleSlider.Label:SetColor(Color(0, 0, 0))
-        zeroLiftAngleSlider.Label:SetFont("fin3_labeltext")
-        zeroLiftAngleSlider:DockMargin(5, -5, 5, 0)
-        zeroLiftAngleSlider:SetText("#tool.fin3.fintype.specificsettings.zeroliftangle")
-        zeroLiftAngleSlider:SetMin(1)
-        zeroLiftAngleSlider:SetMax(5)
-        zeroLiftAngleSlider:SetDecimals(1)
-        zeroLiftAngleSlider:SetValue(GetConVar("fin3_zeroliftangle"):GetFloat())
-        zeroLiftAngleSlider:SetConVar("fin3_zeroliftangle")
+        createSlider(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 5, 1, "fin3_zeroliftangle"):DockMargin(5, -5, 5, 0)
 
         local function showCamberedWingSettings(show)
             camberedWingSettingsContainer:SetVisible(show)
@@ -200,32 +226,42 @@ function TOOL.BuildCPanel(cp)
         end, "fin3_fintype_callback")
     end
 
-    local forceSlider = vgui.Create("DNumSlider", cp)
-    forceSlider:Dock(TOP)
-    forceSlider.Label:SetColor(Color(0, 0, 0))
-    forceSlider.Label:SetFont("fin3_labeltext")
-    forceSlider:DockMargin(10, 10, 10, 0)
-    forceSlider:SetText("#tool.fin3.efficiency")
-    forceSlider:SetMin(0.1)
-    forceSlider:SetMax(1.5)
-    forceSlider:SetDecimals(2)
-    forceSlider:SetValue(GetConVar("fin3_efficiency"):GetFloat())
-    forceSlider:SetConVar("fin3_efficiency")
+    createSlider(cp, "#tool.fin3.efficiency", 0.1, 1.5, 2, "fin3_efficiency")
+    createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault"):DockMargin(20, 0, 20, 10)
 
-    local forceInfo = createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault")
-    forceInfo:DockMargin(20, 0, 20, 10)
+    createCheckbox(cp, "#tool.fin3.induceddrag", "fin3_induceddrag")
+    createLabel(cp, "#tool.fin3.induceddrag.info", "DermaDefault"):DockMargin(20, 10, 20, 10)
 
-    local debugCheckbox = vgui.Create("DCheckBoxLabel", cp)
-    debugCheckbox:Dock(TOP)
-    debugCheckbox:DockMargin(10, 10, 10, 0)
-    debugCheckbox:SetText("#tool.fin3.debug")
-    debugCheckbox.Label:SetFont("fin3_labeltext")
-    debugCheckbox.Label:SetColor(Color(0, 0, 0))
-    debugCheckbox:SetValue(GetConVar("fin3_debug"):GetBool())
-    debugCheckbox:SetConVar("fin3_debug")
+    local debugCheckbox = createCheckbox(cp, "#tool.fin3.debug", "fin3_debug")
+    createLabel(cp, "#tool.fin3.debug.info", "DermaDefault"):DockMargin(20, 10, 20, 0)
 
-    local debugCheckboxInfo = createLabel(cp, "#tool.fin3.debug.info", "DermaDefault")
-    debugCheckboxInfo:DockMargin(20, 10, 20, 0)
+    do -- Options specific to debug mode
+        local debugOptionsContainer = vgui.Create("DPanel", cp)
+        debugOptionsContainer:Dock(TOP)
+        debugOptionsContainer:DockMargin(20, 10, 20, 0)
+        debugOptionsContainer:SetTall(64)
+
+        local debugOptionsLabel = createLabel(debugOptionsContainer, "#tool.fin3.debug.options")
+        debugOptionsLabel:Dock(TOP)
+        debugOptionsLabel:DockMargin(5, 5, 5, 0)
+
+
+
+        local function showDebugOptions(show)
+            debugOptionsContainer:SetVisible(show)
+            cp:InvalidateLayout()
+        end
+
+        function debugCheckbox:OnChange()
+            showDebugOptions(self:GetChecked())
+        end
+
+        cvars.RemoveChangeCallback("fin3_debug", "fin3_debug_callback")
+        cvars.AddChangeCallback("fin3_debug", function(_, _, debug)
+            debugCheckbox:SetChecked(tobool(debug))
+            showDebugOptions(tobool(debug))
+        end, "fin3_debug_callback")
+    end
 
     cp:InvalidateLayout()
 end

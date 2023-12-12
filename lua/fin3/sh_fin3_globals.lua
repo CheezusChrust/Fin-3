@@ -6,7 +6,7 @@ Fin3.allowedClasses = {
     --primitive_airfoil = true
 }
 
-CreateConVar("fin3_forceinduceddrag", "0", FCVAR_REPLICATED, "Whether induced drag should be forced on or not", 0, 1)
+CreateConVar("fin3_forceinduceddrag", "0", FCVAR_REPLICATED + FCVAR_ARCHIVE, "Whether induced drag should be forced on all fins", 0, 1)
 
 if SERVER then
     Fin3.airDensity = 1.225 -- kg/m^3
@@ -14,12 +14,24 @@ if SERVER then
                                 -- Used for calculating induced drag coefficient
 
     Fin3.fins = {}
+
+    util.AddNetworkString("fin3_forceinduceddrag")
+
+    cvars.RemoveChangeCallback("fin3_forceinduceddrag", "fin3_forceinduceddrag")
+    cvars.AddChangeCallback("fin3_forceinduceddrag", function(_, _, new)
+        net.Start("fin3_forceinduceddrag")
+            net.WriteBool(new == "1")
+        net.Broadcast()
+    end, "fin3_forceinduceddrag")
 else
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
-    CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
     CreateClientConVar("fin3_zeroliftangle", "2", false, true, "The angle of attack at which the fin produces no lift", 1, 5)
     CreateClientConVar("fin3_induceddrag", "1", false, true, "Whether or not to calculate induced drag", 0, 1)
+
+    CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
+    CreateClientConVar("fin3_debug_showvectors", "1", true, true, "Whether or not to draw the lift and drag vectors", 0, 1)
+    CreateClientConVar("fin3_debug_showforces", "0", true, true, "Whether or not to display forces applied for lift and drag", 0, 1)
 
     surface.CreateFont("fin3_bigtext", {
         font = "Roboto",

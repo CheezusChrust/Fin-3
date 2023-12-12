@@ -28,7 +28,7 @@ if CLIENT then
 
     language.Add("tool.fin3.fintype", "Airfoil Type")
 
-    language.Add("tool.fin3.fintype.specificsettings", "Airfoil-specific Settings:")
+    language.Add("tool.fin3.fintype.specificsettings", "Airfoil settings:")
     language.Add("tool.fin3.fintype.specificsettings.zeroliftangle", "Zero Lift Angle")
 
     language.Add("tool.fin3.efficiency", "Efficiency")
@@ -46,7 +46,9 @@ if CLIENT then
 
     language.Add("tool.fin3.debug", "Debug")
     language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
-    language.Add("tool.fin3.debug.options", "Debug-specific options:")
+    language.Add("tool.fin3.debug.options", "Debug options:")
+    language.Add("tool.fin3.debug.showvectors", "Display lift/drag vectors")
+    language.Add("tool.fin3.debug.showforces", "Display lift/drag force values")
 end
 
 function TOOL:LeftClick(trace)
@@ -229,7 +231,15 @@ function TOOL.BuildCPanel(cp)
     createSlider(cp, "#tool.fin3.efficiency", 0.1, 1.5, 2, "fin3_efficiency")
     createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault"):DockMargin(20, 0, 20, 10)
 
-    createCheckbox(cp, "#tool.fin3.induceddrag", "fin3_induceddrag")
+    local inducedDragCheckbox = createCheckbox(cp, "#tool.fin3.induceddrag", "fin3_induceddrag")
+    inducedDragCheckbox:SetDisabled(GetConVar("fin3_forceinduceddrag"):GetBool())
+
+    net.Receive("fin3_forceinduceddrag", function()
+        if IsValid(inducedDragCheckbox) then
+            inducedDragCheckbox:SetDisabled(net.ReadBool())
+        end
+    end)
+
     createLabel(cp, "#tool.fin3.induceddrag.info", "DermaDefault"):DockMargin(20, 10, 20, 10)
 
     local debugCheckbox = createCheckbox(cp, "#tool.fin3.debug", "fin3_debug")
@@ -239,13 +249,14 @@ function TOOL.BuildCPanel(cp)
         local debugOptionsContainer = vgui.Create("DPanel", cp)
         debugOptionsContainer:Dock(TOP)
         debugOptionsContainer:DockMargin(20, 10, 20, 0)
-        debugOptionsContainer:SetTall(64)
+        debugOptionsContainer:SetTall(80)
 
         local debugOptionsLabel = createLabel(debugOptionsContainer, "#tool.fin3.debug.options")
         debugOptionsLabel:Dock(TOP)
         debugOptionsLabel:DockMargin(5, 5, 5, 0)
 
-
+        createCheckbox(debugOptionsContainer, "#tool.fin3.debug.showvectors", "fin3_debug_showvectors")
+        createCheckbox(debugOptionsContainer, "#tool.fin3.debug.showforces", "fin3_debug_showforces")
 
         local function showDebugOptions(show)
             debugOptionsContainer:SetVisible(show)

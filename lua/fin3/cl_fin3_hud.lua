@@ -10,24 +10,62 @@ net.Receive("fin3_sendfins", function()
     end
 end)
 
+local cvarDebugEnabled = GetConVar("fin3_debug")
+local cvarShowVectors = GetConVar("fin3_debug_showvectors")
+local cvarShowForces = GetConVar("fin3_debug_showforces")
+
+local function getForceString(newtons)
+    local kgf = newtons / 15.24 -- GMod's gravity is 15.24m/s²
+
+    if kgf < 1000 then
+        return string.format("%dkg", kgf)
+    else
+        return string.format("%.2ft", kgf / 1000)
+    end
+end
+
 hook.Add("HUDPaint", "fin3_hud", function()
-    if GetConVar("fin3_debug"):GetBool() then
-        if not GetConVar("fin3_debug"):GetBool() then return end
+    if cvarDebugEnabled:GetBool() then
+        if cvarShowVectors:GetBool() then
+            for _, fin in pairs(fins) do
+                if IsValid(fin) then
+                    local finPos = fin:GetPos()
 
-        cam.Start3D()
-            for _, sentFin in pairs(fins) do
-                if not IsValid(sentFin) then continue end
+                    local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
+                    local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
 
-                local liftVector = sentFin:GetNW2Vector("fin3_liftVector", vector_origin)
-                local dragVector = sentFin:GetNW2Vector("fin3_dragVector", vector_origin)
-
-                if liftVector == vector_origin and dragVector == vector_origin then continue end
-
-                render.SetColorMaterialIgnoreZ()
-                render.DrawBeam(sentFin:GetPos(), sentFin:GetPos() + liftVector / 5, 1, 0, 1, Color(0, 255, 0))
-                render.DrawBeam(sentFin:GetPos(), sentFin:GetPos() + dragVector / 5, 1, 0, 1, Color(255, 0, 0))
+                    if liftVector ~= vector_origin or dragVector ~= vector_origin then
+                        cam.Start3D()
+                            render.SetColorMaterialIgnoreZ()
+                            render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, Color(0, 255, 0))
+                            render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, Color(255, 0, 0))
+                        cam.End3D()
+                    end
+                end
             end
-        cam.End3D()
+        end
+
+        if cvarShowForces:GetBool() then
+            for _, fin in pairs(fins) do
+                if IsValid(fin) and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                    local screenPos = fin:LocalToWorld(fin:OBBCenter()):ToScreen()
+
+                    local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
+                    local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
+                    local liftForceStr = getForceString(liftVector:Length())
+                    local dragForceStr = getForceString(dragVector:Length())
+
+                    local text = string.format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
+                    surface.SetFont("Trebuchet18")
+                    local textWidth, textHeight = surface.GetTextSize(text)
+                    textWidth = textWidth + 10
+                    textHeight = textHeight + 10
+
+                    draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, Color(0, 0, 0, 230), true, true, true, false)
+                    draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, Color(255, 255, 255), TEXT_ALIGN_RIGHT)
+                end
+            end
+        end
     end
 
     local ply = LocalPlayer()
@@ -50,6 +88,7 @@ hook.Add("HUDPaint", "fin3_hud", function()
         local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
         local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
         local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
+        local inducedDrag = ent:GetNW2Bool("fin3_inducedDrag", true)
 
         local upAxisIndicated = upAxis
         local forwardAxisIndicated = forwardAxis
@@ -64,13 +103,18 @@ hook.Add("HUDPaint", "fin3_hud", function()
                 render.SetColorMaterialIgnoreZ()
                 render.DrawBeam(centerPos, centerPos + forwardAxisIndicated * entSize, 1, 0, 1, Color(255, 0, 0))
                 render.DrawBeam(centerPos, centerPos + upAxisIndicated * 25, 1, 0, 1, Color(0, 255, 0))
+
+                if finType ~= "" then
+                    render.DrawBeam(centerPos, centerPos + forwardAxis * entSize / 2, 0.5, 0, 1, Color(200, 0, 0))
+                    render.DrawBeam(centerPos, centerPos + upAxis * 15, 0.5, 0, 1, Color(0, 200, 0))
+                end
             cam.End3D()
 
             local fwdTextPos = (centerPos + forwardAxisIndicated * entSize):ToScreen()
             draw.SimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, Color(255, 0, 0), 1, 1, 1, Color(0, 0, 0))
 
             local upTextPos = (centerPos + upAxisIndicated * 25):ToScreen()
-            draw.SimpleTextOutlined("Up", "DermaLarge", upTextPos.x, upTextPos.y, Color(0, 255, 0), 1, 1, 1, Color(0, 0, 0))
+            draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, Color(0, 255, 0), 1, 1, 1, Color(0, 0, 0))
         else
             draw.TextShadow({
                 text = "Fin's forward axis must be perpendicular to its upward axis!",
@@ -85,11 +129,12 @@ hook.Add("HUDPaint", "fin3_hud", function()
         if finType ~= "" then
             surface.SetFont("Trebuchet18")
             local infoPos = centerPos:ToScreen()
-            local text = string.format("Airfoil Type: %s\nEfficiency: %.2fx\nEffective Surface Area: %.2fm^2\nAspect Ratio: %.2f",
+            local text = string.format("Airfoil Type: %s\nEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %s",
                 language.GetPhrase("tool.fin3.fintype." .. finType),
                 efficiency,
                 surfaceArea * efficiency,
-                aspectRatio
+                aspectRatio,
+                inducedDrag and "Enabled" or "Disabled"
             )
             local textWidth, textHeight = surface.GetTextSize(text)
 

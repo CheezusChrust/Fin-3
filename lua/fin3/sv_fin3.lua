@@ -13,9 +13,9 @@ function Fin3.new(_, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.root = getRootParent(ent)
-    fin.efficiency = data.efficiency
+    fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
     fin.finType = data.finType
-    fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or data.inducedDrag
+    fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or (data.inducedDrag or true)
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
 
@@ -55,6 +55,7 @@ function Fin3.new(_, ent, data)
     ent:SetNW2Float("fin3_efficiency", fin.efficiency)
     ent:SetNW2Float("fin3_surfaceArea", fin.surfaceArea)
     ent:SetNW2Float("fin3_aspectRatio", fin.aspectRatio)
+    ent:SetNW2Bool("fin3_inducedDrag", fin.inducedDrag)
 
     fin.phys = phys
 

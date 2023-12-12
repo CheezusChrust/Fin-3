@@ -15,7 +15,10 @@ Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
     - There is a slider to multiply the final lift/drag forces, ranging from 0.1x to 1.5x if needed
 - Debug display allowing you to visualize the lift and drag vectors, and see exactly how much force is applied to each fin
 
+## Known Problems
+- Propellers made with Fin 3 are less efficient than they should be, because velocity is sampled from the center of the fin. This may or may not be fixed in the future. If I can't find a good solution, a simulated propeller tool will be added alongside the main Fin 3 tool.
+
 ## Disclaimer
-I don't claim to be anything close to an aerospace engineer. All of my information has come from either friends (thanks Kel) or from the internet. If something can be improved, optimized, or changed for the better, post an issue or create a pull request.
+I don't claim to be anything close to an aerospace engineer. All of my information regarding aerodynamics has come from either friends (thanks Kel) or from the internet. If something can be improved, optimized, or changed for the better, post an issue or create a pull request.
 
 Inspired by [Cathier/Alexandre's Better Fin Tool](https://github.com/Cathier/better-fin-tool/tree/master) which was seemingly abandoned.

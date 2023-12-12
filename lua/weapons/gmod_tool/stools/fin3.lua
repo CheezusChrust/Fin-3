@@ -65,7 +65,7 @@ function TOOL:LeftClick(trace)
     local upAxis, forwardAxis = Fin3.getPropAxesFromTrace(trace)
     local ply = self:GetOwner()
 
-    Fin3.new(_, ent, {
+    Fin3.new(ply, ent, {
         upAxis = upAxis,
         forwardAxis = forwardAxis,
         finType = ply:GetInfo("fin3_fintype"),

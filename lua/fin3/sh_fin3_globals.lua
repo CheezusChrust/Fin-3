@@ -23,6 +23,9 @@ if SERVER then
             net.WriteBool(new == "1")
         net.Broadcast()
     end, "fin3_forceinduceddrag")
+
+    Fin3.playerFinCount = Fin3.playerFinCount or {}
+    CreateConVar("sbox_max_fin3", "20", FCVAR_ARCHIVE, "Maximum number of entities with Fin3 each player can have", 0)
 else
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)

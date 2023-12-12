@@ -4,7 +4,20 @@ local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
 local dt = engine.TickInterval()
 
-function Fin3.new(_, ent, data)
+function Fin3.new(ply, ent, data)
+    if not Fin3.fins[ent] then
+        local finLimit = GetConVar("sbox_max_fin3"):GetInt()
+        local currentFinCount = Fin3.playerFinCount[ply] or 0
+
+        if currentFinCount >= finLimit then
+            ply:LimitHit("Fin3")
+
+            return
+        end
+
+        Fin3.playerFinCount[ply] = currentFinCount + 1
+    end
+
     local fin = {}
 
     fin.ent = ent
@@ -193,6 +206,10 @@ function Fin3.new(_, ent, data)
         end
 
         Fin3.fins[self.ent] = nil
+
+        if IsValid(ply) and Fin3.playerFinCount[ply] then
+            Fin3.playerFinCount[ply] = Fin3.playerFinCount[ply] - 1
+        end
 
         duplicator.ClearEntityModifier(self.ent, "fin3")
     end

@@ -26,7 +26,7 @@ function Fin3.new(ply, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.root = getRootParent(ent)
-    fin.zeroLiftAngle = data.zeroLiftAngle
+    fin.zeroLiftAngle = data.zeroLiftAngle or 5
     fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
     fin.finType = data.finType
     fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or (data.inducedDrag or true)

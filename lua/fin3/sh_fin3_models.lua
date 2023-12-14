@@ -74,24 +74,24 @@ Fin3.models = {
             lift = {
                 {x = -90, y = 0},
                 {x = -75, y = -0.83},
-                {x = -65, y = -1.01},
-                {x = -55, y = -1.05},
-                {x = -45, y = -0.9},
-                {x = -35, y = -0.68},
-                {x = -25, y = -0.35},
-                {x = -15, y = -0.55},
-                {x = -5, y = 0},
-                {x = 0, y = 0.5},
-                {x = 5, y = 1},
-                {x = 10, y = 1.4},
-                {x = 17, y = 1.6},
-                {x = 23, y = 0.8},
-                {x = 30, y = 0.9},
-                {x = 40, y = 1.05},
-                {x = 50, y = 1},
-                {x = 60, y = 0.88},
-                {x = 70, y = 0.65},
-                {x = 80, y = 0.35},
+                {x = -60, y = -1.01},
+                {x = -50, y = -1.05},
+                {x = -40, y = -0.9},
+                {x = -30, y = -0.68},
+                {x = -20, y = -0.35},
+                {x = -10, y = -0.55},
+                {x = 0, y = 0},
+                {x = 5, y = 0.5},
+                {x = 10, y = 1},
+                {x = 15, y = 1.4},
+                {x = 22, y = 1.6},
+                {x = 28, y = 0.8},
+                {x = 35, y = 0.9},
+                {x = 45, y = 1.05},
+                {x = 55, y = 1},
+                {x = 65, y = 0.88},
+                {x = 75, y = 0.65},
+                {x = 83, y = 0.35},
                 {x = 90, y = 0}
             },
             drag = {
@@ -104,13 +104,14 @@ Fin3.models = {
                 {x = -30, y = 0.3},
                 {x = -20, y = 0.09},
                 {x = -15, y = 0.04},
-                {x = -5, y = 0.02},
-                {x = 0, y = 0.02},
-                {x = 5, y = 0.02},
-                {x = 10, y = 0.04},
-                {x = 15, y = 0.12},
-                {x = 23, y = 0.3},
-                {x = 30, y = 0.6},
+                {x = -5, y = 0.01},
+                {x = 0, y = 0.01},
+                {x = 5, y = 0.01},
+                {x = 10, y = 0.015},
+                {x = 15, y = 0.03},
+                {x = 20, y = 0.1},
+                {x = 25, y = 0.3},
+                {x = 30, y = 0.5},
                 {x = 40, y = 0.9},
                 {x = 50, y = 1.25},
                 {x = 60, y = 1.5},
@@ -135,13 +136,13 @@ if CLIENT then
     language.Add("tool.fin3.fintype.symmetrical", "Symmetrical")
     language.Add("tool.fin3.fintype.symmetrical.info",
         "Symmetrical airfoils do not produce lift at 0 AoA, and can resist stalling up to around 15 degrees. " ..
-        "Recommended for any non-lifting fins such as control surfaces."
+        "They have equal performance for negative and positive AoAs, so are recommended for control surfaces."
     )
 
     language.Add("tool.fin3.fintype.cambered", "Cambered")
     language.Add("tool.fin3.fintype.cambered.info",
         "Cambered airfoils produce a lifting force at 0 AoA, and can resist stalling up to around 15 degrees. " ..
-        "Recommended for the main wing of an aircraft.\n" ..
-        "The zero lift angle determines the AoA at which the wing produces no lift.\n(SLIDER CURRENTLY DOES NOTHING)"
+        "Recommended for the main wing of an aircraft as it has much better performance with a positive AoA.\n" ..
+        "The zero lift angle determines the negative AoA at which the wing produces no lift."
     )
 end

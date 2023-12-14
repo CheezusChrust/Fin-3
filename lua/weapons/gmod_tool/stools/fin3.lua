@@ -69,6 +69,7 @@ function TOOL:LeftClick(trace)
         upAxis = upAxis,
         forwardAxis = forwardAxis,
         finType = ply:GetInfo("fin3_fintype"),
+        zeroLiftAngle = ply:GetInfoNum("fin3_zeroliftangle", 1),
         efficiency = ply:GetInfoNum("fin3_efficiency", 1),
         inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
     })
@@ -170,7 +171,7 @@ function TOOL.BuildCPanel(cp)
         self:SetTall(textHeight + 10)
     end
 
-    do -- Fin type selection and settings
+    do -- Fin type selection and fin type specific settings
         local optionsDropdownContainer = vgui.Create("DPanel", cp)
         optionsDropdownContainer:Dock(TOP)
         optionsDropdownContainer:DockMargin(10, 10, 10, 0)
@@ -200,12 +201,14 @@ function TOOL.BuildCPanel(cp)
         camberedWingSettingsContainer:SetTall(48)
 
         createLabel(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings", "fin3_labeltext"):DockMargin(5, 5, 5, 0)
-        createSlider(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 5, 1, "fin3_zeroliftangle"):DockMargin(5, -5, 5, 0)
+        createSlider(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 8, 1, "fin3_zeroliftangle"):DockMargin(5, -5, 5, 0)
 
         local function showCamberedWingSettings(show)
             camberedWingSettingsContainer:SetVisible(show)
             cp:InvalidateLayout()
         end
+
+        showCamberedWingSettings(GetConVar("fin3_fintype"):GetString() == "cambered")
 
         function finTypeSelection:OnSelect(_, _, finType)
             RunConsoleCommand("fin3_fintype", finType)

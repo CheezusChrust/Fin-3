@@ -1,4 +1,4 @@
-local deg, asin, abs, sign, pi = math.deg, math.asin, math.abs, Fin3.sign, math.pi
+local deg, rad, asin, cos, abs, sign, pi = math.deg, math.rad, math.asin, math.cos, math.abs, Fin3.sign, math.pi
 local localToWorldVector = Fin3.localToWorldVector
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
@@ -26,6 +26,7 @@ function Fin3.new(ply, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.root = getRootParent(ent)
+    fin.zeroLiftAngle = data.zeroLiftAngle
     fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
     fin.finType = data.finType
     fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or (data.inducedDrag or true)
@@ -94,10 +95,10 @@ function Fin3.new(ply, ent, data)
 
         if self.velVector == vector_origin then return end
 
-        self.forwardVel = abs(self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.forwardAxis)))
-        self.rightVel = abs(self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.rightAxis)))
+        self.forwardVel = self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.forwardAxis))
+        self.rightVel = self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.rightAxis))
 
-        local forwardAndRightVel = self.forwardVel + self.rightVel
+        local forwardAndRightVel = abs(self.forwardVel) + abs(self.rightVel)
         self.fwdVelRatio = self.forwardVel / forwardAndRightVel
 
         self.velNorm = self.velVector:GetNormalized()
@@ -126,7 +127,15 @@ function Fin3.new(ply, ent, data)
         if self.forwardVel > 0 and self.finType ~= "flat" then
             fwdVelRatio = self.fwdVelRatio
 
-            local liftCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.lift, self.angleOfAttack + 91)
+            local AoA = self.angleOfAttack
+            local AoAFinal = AoA
+
+            if curModel.isCambered then
+                local AoAShiftFactor = cos(rad(AoAFinal))
+                AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
+            end
+
+            local liftCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.lift, AoAFinal + 91)
 
             liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
         else
@@ -151,7 +160,15 @@ function Fin3.new(ply, ent, data)
         if self.forwardVel > 0 and self.finType ~= "flat" then
             local fwdVelRatio = self.fwdVelRatio
 
-            local dragCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.drag, self.angleOfAttack + 91)
+            local AoA = self.angleOfAttack
+            local AoAFinal = AoA
+
+            if curModel.isCambered then
+                local AoAShiftFactor = cos(rad(AoAFinal))
+                AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
+            end
+
+            local dragCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.drag, AoAFinal + 91)
 
             dragCoef = abs((dragCoefForward * fwdVelRatio) + (dragCoefFlat * (1 - fwdVelRatio)))
         else

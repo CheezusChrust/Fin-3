@@ -14,7 +14,7 @@ local cvarDebugEnabled = GetConVar("fin3_debug")
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
 
-local RED, GREEN, DARKRED, DARKGREEN = Color(255, 0, 0), Color(0, 255, 0), Color(100, 0, 0), Color(0, 100, 0)
+local RED, GREEN, DARKRED, DARKGREEN = Color(255, 0, 0), Color(0, 255, 0), Color(200, 0, 0), Color(0, 200, 0)
 local BACKGROUND = Color(0, 0, 0, 230)
 
 local function getForceString(newtons)

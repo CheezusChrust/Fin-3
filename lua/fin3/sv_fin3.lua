@@ -33,7 +33,12 @@ function Fin3.new(ply, ent, data)
         fin.zeroLiftAngle = 0
     end
     fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
-    fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or (data.inducedDrag and true or false)
+
+    if data.inducedDrag == nil then
+        fin.inducedDrag = true
+    else
+        fin.inducedDrag = GetConVar("fin3_forceinduceddrag"):GetBool() and true or data.inducedDrag
+    end
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
 

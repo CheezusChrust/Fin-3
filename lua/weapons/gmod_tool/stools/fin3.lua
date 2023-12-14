@@ -92,6 +92,11 @@ function TOOL:RightClick(trace)
     if fin then
         local ply = self:GetOwner()
         ply:ConCommand("fin3_fintype " .. fin.finType)
+
+        if fin.zeroLiftAngle and fin.zeroLiftAngle ~= 0 then
+            ply:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle or 1)
+        end
+
         ply:ConCommand("fin3_efficiency " .. fin.efficiency)
         ply:ConCommand("fin3_induceddrag " .. (fin.inducedDrag and 1 or 0))
     end

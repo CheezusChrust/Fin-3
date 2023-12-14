@@ -1,6 +1,8 @@
 # Fin 3 - *a proper fin tool*
 
-Up until this point, the only way to have an aircraft in GMod fly in a somewhat realistic manner was to code something yourself via Expression 2 or Starfall. All fin/wing addons I have tested on the workshop are either very old, unrealistic, or both (I'm looking at you, Fin 2).
+Fin 3 is a tool intended to create a "close enough" simulation of airflow over an airfoil in Garry's Mod.
+
+Up until this point, the only way to have an aircraft fly in a somewhat realistic manner was to code something yourself via Expression 2 or Starfall. All fin/wing addons I have tested on the workshop are very old, unrealistic, hard to use, or some combination of the three (I'm looking at you, Fin 2).
 
 Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 

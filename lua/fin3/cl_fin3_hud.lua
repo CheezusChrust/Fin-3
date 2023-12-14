@@ -14,6 +14,9 @@ local cvarDebugEnabled = GetConVar("fin3_debug")
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
 
+local RED, GREEN, DARKRED, DARKGREEN = Color(255, 0, 0), Color(0, 255, 0), Color(100, 0, 0), Color(0, 100, 0)
+local BACKGROUND = Color(0, 0, 0, 230)
+
 local function getForceString(newtons)
     local kgf = newtons / 15.24 -- GMod's gravity is 15.24m/s²
 
@@ -37,8 +40,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
                     if liftVector ~= vector_origin or dragVector ~= vector_origin then
                         cam.Start3D()
                             render.SetColorMaterialIgnoreZ()
-                            render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, Color(0, 255, 0))
-                            render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, Color(255, 0, 0))
+                            render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, GREEN)
+                            render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, RED)
                         cam.End3D()
                     end
                 end
@@ -61,8 +64,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
                     textWidth = textWidth + 10
                     textHeight = textHeight + 10
 
-                    draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, Color(0, 0, 0, 230), true, true, true, false)
-                    draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, Color(255, 255, 255), TEXT_ALIGN_RIGHT)
+                    draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
+                    draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
                 end
             end
         end
@@ -102,26 +105,26 @@ hook.Add("HUDPaint", "fin3_hud", function()
         if dot > -0.9 and dot < 0.9 and forwardAxis ~= vector_origin then
             cam.Start3D()
                 render.SetColorMaterialIgnoreZ()
-                render.DrawBeam(centerPos, centerPos + forwardAxisIndicated * entSize, 1, 0, 1, Color(255, 0, 0))
-                render.DrawBeam(centerPos, centerPos + upAxisIndicated * 25, 1, 0, 1, Color(0, 255, 0))
+                render.DrawBeam(centerPos, centerPos + forwardAxisIndicated * entSize, 1, 0, 1, RED)
+                render.DrawBeam(centerPos, centerPos + upAxisIndicated * 25, 1, 0, 1, GREEN)
 
                 if finType ~= "" then
-                    render.DrawBeam(centerPos, centerPos + forwardAxis * entSize / 2, 0.5, 0, 1, Color(200, 0, 0))
-                    render.DrawBeam(centerPos, centerPos + upAxis * 15, 0.5, 0, 1, Color(0, 200, 0))
+                    render.DrawBeam(centerPos, centerPos + forwardAxis * entSize / 2, 0.5, 0, 1, DARKRED)
+                    render.DrawBeam(centerPos, centerPos + upAxis * 15, 0.5, 0, 1, DARKGREEN)
                 end
             cam.End3D()
 
             local fwdTextPos = (centerPos + forwardAxisIndicated * entSize):ToScreen()
-            draw.SimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, Color(255, 0, 0), 1, 1, 1, Color(0, 0, 0))
+            draw.SimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, RED, 1, 1, 1, color_black)
 
             local upTextPos = (centerPos + upAxisIndicated * 25):ToScreen()
-            draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, Color(0, 255, 0), 1, 1, 1, Color(0, 0, 0))
+            draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
         else
             draw.TextShadow({
                 text = "Fin's forward axis must be perpendicular to its upward axis!",
                 font = "DermaLarge",
                 pos = {ScrW() / 2, ScrH() / 2},
-                color = Color(255, 0, 0),
+                color = RED,
                 xalign = TEXT_ALIGN_CENTER,
                 yalign = TEXT_ALIGN_CENTER
             }, 1, 255)
@@ -141,8 +144,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
             )
             local textWidth, textHeight = surface.GetTextSize(text)
 
-            draw.RoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, Color(0, 0, 0, 230), false, true, true, true)
-            draw.DrawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, Color(255, 255, 255), TEXT_ALIGN_LEFT)
+            draw.RoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, BACKGROUND, false, true, true, true)
+            draw.DrawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
         end
     end
 end)

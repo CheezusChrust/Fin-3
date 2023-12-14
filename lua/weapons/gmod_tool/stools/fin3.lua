@@ -65,11 +65,13 @@ function TOOL:LeftClick(trace)
     local upAxis, forwardAxis = Fin3.getPropAxesFromTrace(trace)
     local ply = self:GetOwner()
 
+    local finType = ply:GetInfo("fin3_fintype")
+
     Fin3.new(ply, ent, {
         upAxis = upAxis,
         forwardAxis = forwardAxis,
-        finType = ply:GetInfo("fin3_fintype"),
-        zeroLiftAngle = ply:GetInfoNum("fin3_zeroliftangle", 1),
+        finType = finType,
+        zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
         efficiency = ply:GetInfoNum("fin3_efficiency", 1),
         inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
     })

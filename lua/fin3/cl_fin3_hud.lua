@@ -14,7 +14,7 @@ local cvarDebugEnabled = GetConVar("fin3_debug")
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
 
-local RED, GREEN, DARKRED, DARKGREEN = Color(255, 0, 0), Color(0, 255, 0), Color(200, 0, 0), Color(0, 200, 0)
+local RED, GREEN, RED_GHOST, GREEN_GHOST = Color(255, 0, 0), Color(0, 255, 0), Color(200, 0, 0, 150), Color(0, 200, 0, 150)
 local BACKGROUND = Color(0, 0, 0, 230)
 
 local function getForceString(newtons)
@@ -109,8 +109,13 @@ hook.Add("HUDPaint", "fin3_hud", function()
                 render.DrawBeam(centerPos, centerPos + upAxisIndicated * 25, 1, 0, 1, GREEN)
 
                 if finType ~= "" then
-                    render.DrawBeam(centerPos, centerPos + forwardAxis * entSize / 2, 0.5, 0, 1, DARKRED)
-                    render.DrawBeam(centerPos, centerPos + upAxis * 15, 0.5, 0, 1, DARKGREEN)
+                    if forwardAxis ~= forwardAxisIndicated then
+                        render.DrawBeam(centerPos, centerPos + forwardAxis * entSize / 2, 0.5, 0, 1, RED_GHOST)
+                    end
+
+                    if upAxis ~= upAxisIndicated then
+                        render.DrawBeam(centerPos, centerPos + upAxis * 15, 0.5, 0, 1, GREEN_GHOST)
+                    end
                 end
             cam.End3D()
 

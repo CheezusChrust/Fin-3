@@ -19,6 +19,11 @@ Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 
 ## Known Problems
 - Propellers made with Fin 3 are less efficient than they should be, because velocity is sampled from the center of the fin. This may or may not be fixed in the future. If I can't find a good solution, a simulated propeller tool will be added alongside the main Fin 3 tool.
+- Very light fins/vehicles with a large total surface area may spaz out due to extreme forces
+
+## Serverside Console Commands
+- `sbox_max_fin3` - maximum number of fins allowed per player - default 20
+- `fin3_forceinduceddrag` - when set to 1, induced drag is forced on for all fins - may be useful for combat servers
 
 ## Disclaimer
 I don't claim to be anything close to an aerospace engineer. All of my information regarding aerodynamics has come from either friends (thanks Kel) or from the internet. If something can be improved, optimized, or changed for the better, post an issue or create a pull request.

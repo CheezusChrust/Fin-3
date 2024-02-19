@@ -3,22 +3,24 @@ TOOL.Name = "#tool.fin3.name"
 
 if CLIENT then
     TOOL.Information = {
-        {
-            name = "left"
-        },
-        {
-            name = "right"
-        },
-        {
-            name = "reload"
-        }
+        { name = "left", stage = 0 },
+        { name = "right", stage = 0 },
+        { name = "reload", stage = 0 },
+
+        { name = "stage1.definefwd", icon = "gui/lmb.png", stage = 1 },
+        { name = "stage1.definefwd2", icon = "gui/lmb.png", icon2 = "gui/info", stage = 1 },
+        { name = "stage1.reload", icon = "gui/r.png", stage = 1 }
     }
 
     language.Add("tool.fin3.name", "Fin 3")
     language.Add("tool.fin3.desc", "Turn any prop into a simulated fin")
-    language.Add("tool.fin3.left", "Create or update a fin")
+    language.Add("tool.fin3.left", "Create or update a fin - first click defines the up axis when creating a new fin")
     language.Add("tool.fin3.right", "Copy fin settings")
     language.Add("tool.fin3.reload", "Remove fin from prop")
+
+    language.Add("tool.fin3.stage1.definefwd", "Define the fin's forward vector based on your aim pos")
+    language.Add("tool.fin3.stage1.definefwd2", "(Hold SPRINT) Define the fin's forward vector based on the hit normal of the tooled surface")
+    language.Add("tool.fin3.stage1.reload", "Cancel fin creation")
 
     language.Add("tool.fin3.info",
         "Important Info!\n" ..
@@ -51,35 +53,121 @@ if CLIENT then
     language.Add("tool.fin3.debug.showforces", "Display lift/drag force values")
 end
 
+function TOOL:SelectEntity(ent)
+    self.selectedEntity = ent
+
+    if SERVER then
+        self.lastColor = ent:GetColor()
+        ent:SetColor(Color(0, 0, 255))
+    end
+end
+
+function TOOL:ClearSelection()
+    if IsValid(self.selectedEntity) and SERVER then
+        self.selectedEntity:SetColor(self.lastColor)
+    end
+
+    self.selectedEntity = nil
+    self.tempUpAxis = nil
+    self.tempForwardAxis = nil
+end
+
 function TOOL:LeftClick(trace)
     local ent = trace.Entity
 
-    if CLIENT then
-        return Fin3.allowedClasses[ent:GetClass()]
-    end
+    local stage = self:GetStage()
 
-    if not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()] then
+    if stage == 0 and (not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()]) then
         return false
     end
 
-    local upAxis, forwardAxis = Fin3.getPropAxesFromTrace(trace)
     local ply = self:GetOwner()
-
     local finType = ply:GetInfo("fin3_fintype")
 
-    Fin3.new(ply, ent, {
-        upAxis = upAxis,
-        forwardAxis = forwardAxis,
-        finType = finType,
-        zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
-        efficiency = ply:GetInfoNum("fin3_efficiency", 1),
-        inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
-    })
+    if stage == 0 then
+        if SERVER and Fin3.fins[ent] then
+            Fin3.new(ply, ent, {
+                upAxis = Fin3.fins[ent].upAxis,
+                forwardAxis = Fin3.fins[ent].forwardAxis,
+                finType = finType,
+                zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+                efficiency = ply:GetInfoNum("fin3_efficiency", 1),
+                inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
+            })
 
-    return true
+            return true
+        end
+
+        if CLIENT and ent:GetNW2String("fin3_finType", "") ~= "" then
+            return true
+        end
+
+        self:SelectEntity(ent)
+        self:SetStage(1)
+
+        self.tempUpAxis = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, trace.HitNormal))
+
+        return true
+    else
+        local upAxis = self.tempUpAxis
+        local forwardAxis = self.tempForwardAxis
+
+        if forwardAxis == vector_origin or forwardAxis == upAxis then
+            self:ClearSelection()
+            self:SetStage(0)
+
+            return true
+        end
+
+        if SERVER then
+            Fin3.new(ply, self.selectedEntity, {
+                upAxis = upAxis,
+                forwardAxis = forwardAxis,
+                finType = finType,
+                zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+                efficiency = ply:GetInfoNum("fin3_efficiency", 1),
+                inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
+            })
+        end
+
+        self:ClearSelection()
+        self:SetStage(0)
+
+        return true
+    end
+end
+
+function TOOL:Think()
+    if self:GetStage() == 0 then return end
+
+    local selected = self.selectedEntity
+
+    if not IsValid(selected) then
+        self:ClearSelection()
+        self:SetStage(0)
+
+        return
+    end
+
+    local owner = self:GetOwner()
+
+    local holdingShift = owner:KeyDown(IN_SPEED)
+
+    local tr = owner:GetEyeTrace()
+    if not holdingShift then
+        local obbCenterWorld = selected:LocalToWorld(selected:OBBCenter())
+        local dirFromCenter = Fin3.worldToLocalVector(selected, (tr.HitPos - obbCenterWorld):GetNormalized())
+        local upAxis = self.tempUpAxis
+        local projectedVector = Fin3.projectVector(dirFromCenter, upAxis)
+        self.tempForwardAxis = Fin3.roundVectorToAxis(projectedVector)
+    else
+        self.tempForwardAxis = Fin3.projectVector(Fin3.worldToLocalVector(selected, tr.HitNormal), self.tempUpAxis):GetNormalized()
+    end
 end
 
 function TOOL:RightClick(trace)
+    if self:GetStage() == 1 then return false end
+
     local ent = trace.Entity
     local class = ent:GetClass()
 
@@ -94,7 +182,7 @@ function TOOL:RightClick(trace)
         ply:ConCommand("fin3_fintype " .. fin.finType)
 
         if fin.zeroLiftAngle and fin.zeroLiftAngle ~= 0 then
-            ply:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle or 1)
+            ply:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle)
         end
 
         ply:ConCommand("fin3_efficiency " .. fin.efficiency)
@@ -105,6 +193,13 @@ function TOOL:RightClick(trace)
 end
 
 function TOOL:Reload(trace)
+    if self:GetStage() == 1 then
+        self:ClearSelection()
+        self:SetStage(0)
+
+        return true
+    end
+
     local ent = trace.Entity
     local class = ent:GetClass()
 
@@ -113,6 +208,11 @@ function TOOL:Reload(trace)
     end
 
     return Fin3.allowedClasses[class]
+end
+
+function TOOL:Holster()
+    self:ClearSelection()
+    self:SetStage(0)
 end
 
 

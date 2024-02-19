@@ -42,8 +42,8 @@ function Fin3.new(ply, ent, data)
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
 
-    local span = abs(obbSize:Dot(fin.rightAxis))
-    local chord = abs(obbSize:Dot(fin.forwardAxis))
+    local span = abs(obbSize:Dot(Fin3.roundVectorToAxis(fin.rightAxis)))
+    local chord = abs(obbSize:Dot(Fin3.roundVectorToAxis(fin.forwardAxis)))
 
     fin.surfaceArea = span * chord * 0.00064516 -- in^2 to m^2
     fin.aspectRatio = span / chord

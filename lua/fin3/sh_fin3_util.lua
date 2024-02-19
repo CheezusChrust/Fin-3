@@ -95,20 +95,8 @@ do
         return ent:WorldToLocal(v + ent:GetPos())
     end
 
-    -- Returns the local axes that should be used for the fin's up and forward directions based on the player's aim location
-    function Fin3.getPropAxesFromTrace(trace)
-        local ent = trace.Entity
-        local obbCenterWorld = ent:LocalToWorld(ent:OBBCenter())
-        local hitNormal = trace.HitNormal
-        local upAxis = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, hitNormal))
-        local upAxisWorld = Fin3.localToWorldVector(ent, upAxis)
-
-        local directionToHitPos = (trace.HitPos - obbCenterWorld):GetNormalized()
-        local projection = directionToHitPos:Dot(upAxisWorld) * upAxisWorld
-        local projectedVector = directionToHitPos - projection
-        local forwardAxis = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, projectedVector))
-
-        return upAxis, forwardAxis
+    function Fin3.projectVector(v, normal)
+        return v - v:Dot(normal) * normal
     end
 end
 

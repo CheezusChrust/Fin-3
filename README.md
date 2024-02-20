@@ -25,6 +25,16 @@ Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 - `sbox_max_fin3` - maximum number of fins allowed per player - default 20
 - `fin3_forceinduceddrag` - when set to 1, induced drag is forced on for all fins - may be useful for combat servers
 
+## To Do
+- [ ] Wind
+- [ ] Thermals
+- [x] Better way to define forward vector of fin (get normal of separately clicked prop?)
+- [ ] Some way to reliably detect ground effect without optimization problems
+- [ ] Stall angle changing based on airspeed
+- [ ] Sample velocity at multiple points along the wing to make propellers/rotors more effective
+- [ ] E2/SF functions to get information about/create a fin
+- [ ] Warn about/remove Fin 2 on entities that already have it when applying Fin 3
+
 ## Disclaimer
 I don't claim to be anything close to an aerospace engineer. All of my information regarding aerodynamics has come from either friends (thanks Kel) or from the internet. If something can be improved, optimized, or changed for the better, post an issue or create a pull request.
 

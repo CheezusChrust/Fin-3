@@ -19,7 +19,7 @@ Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 
 ## Known Problems
 - Propellers made with Fin 3 are less efficient than they should be, because velocity is sampled from the center of the fin. This may or may not be fixed in the future. If I can't find a good solution, a simulated propeller tool will be added alongside the main Fin 3 tool.
-- Very light fins/vehicles with a large total surface area may spaz out due to extreme forces
+- Extremely light fins or vehicles with a large fin surface area may spaz/wiggle due to extreme forces
 
 ## Serverside Console Commands
 - `sbox_max_fin3` - maximum number of fins allowed per player - default 20

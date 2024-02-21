@@ -33,7 +33,7 @@ Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 - [ ] Stall angle changing based on airspeed
 - [ ] Sample velocity at multiple points along the wing to make propellers/rotors more effective
 - [ ] E2/SF functions to get information about/create a fin
-- [ ] Warn about/remove Fin 2 on entities that already have it when applying Fin 3
+- [X] Warn about/remove Fin 2 on entities that already have it when applying Fin 3
 
 ## Disclaimer
 I don't claim to be anything close to an aerospace engineer. All of my information regarding aerodynamics has come from either friends (thanks Kel) or from the internet. If something can be improved, optimized, or changed for the better, post an issue or create a pull request.

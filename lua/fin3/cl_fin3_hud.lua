@@ -83,6 +83,12 @@ hook.Add("HUDPaint", "fin3_hud", function()
             ent = selected
         end
 
+        local fin2Eff = ent:GetNWFloat("efficency", 0)
+        if fin2Eff ~= 0 and fin2Eff ~= -99 and fin2Eff ~= -100000000 then
+            local drawPos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
+            draw.SimpleTextOutlined("Warning: this entity still has Fin 2 applied!", "DermaLarge", drawPos.x, drawPos.y, RED, 1, 1, 1, color_black)
+        end
+
         local tempUpAxis = ply:GetNW2Vector("fin3_tempUpAxis", vector_origin)
         local tempForwardAxis = ply:GetNW2Vector("fin3_tempForwardAxis", vector_origin)
 

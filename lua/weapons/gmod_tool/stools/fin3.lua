@@ -57,6 +57,7 @@ function TOOL:SelectEntity(ent)
     self.selectedEntity = ent
 
     if SERVER then
+        self:GetOwner():SetNW2Entity("fin3_selectedEntity", ent)
         self.lastColor = ent:GetColor()
         ent:SetColor(Color(0, 0, 255))
     end
@@ -70,6 +71,14 @@ function TOOL:ClearSelection()
     self.selectedEntity = nil
     self.tempUpAxis = nil
     self.tempForwardAxis = nil
+
+    local owner = self:GetOwner()
+
+    if SERVER then
+        owner:SetNW2Vector("fin3_tempUpAxis", nil)
+        owner:SetNW2Vector("fin3_tempForwardAxis", nil)
+        owner:SetNW2Entity("fin3_selectedEntity", nil)
+    end
 end
 
 function TOOL:LeftClick(trace)
@@ -81,34 +90,37 @@ function TOOL:LeftClick(trace)
         return false
     end
 
-    local ply = self:GetOwner()
-    local finType = ply:GetInfo("fin3_fintype")
+    local owner = self:GetOwner()
+    local finType = owner:GetInfo("fin3_fintype")
 
     if stage == 0 then
         if SERVER and Fin3.fins[ent] then
-            Fin3.new(ply, ent, {
+            Fin3.new(owner, ent, {
                 upAxis = Fin3.fins[ent].upAxis,
                 forwardAxis = Fin3.fins[ent].forwardAxis,
                 finType = finType,
-                zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
-                efficiency = ply:GetInfoNum("fin3_efficiency", 1),
-                inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
+                zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+                efficiency = owner:GetInfoNum("fin3_efficiency", 1),
+                inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1) == 1
             })
 
             return true
-        end
-
-        if CLIENT and ent:GetNW2String("fin3_finType", "") ~= "" then
+        elseif ent:GetNW2String("fin3_finType", "") ~= "" then
             return true
         end
 
         self:SelectEntity(ent)
         self:SetStage(1)
 
-        self.tempUpAxis = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, trace.HitNormal))
+        if SERVER then
+            self.tempUpAxis = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, trace.HitNormal))
+            owner:SetNW2Vector("fin3_tempUpAxis", self.tempUpAxis)
+        end
 
         return true
     else
+        if CLIENT then return true end
+
         local upAxis = self.tempUpAxis
         local forwardAxis = self.tempForwardAxis
 
@@ -119,16 +131,14 @@ function TOOL:LeftClick(trace)
             return true
         end
 
-        if SERVER then
-            Fin3.new(ply, self.selectedEntity, {
-                upAxis = upAxis,
-                forwardAxis = forwardAxis,
-                finType = finType,
-                zeroLiftAngle = finType == "cambered" and ply:GetInfoNum("fin3_zeroliftangle", 1) or 0,
-                efficiency = ply:GetInfoNum("fin3_efficiency", 1),
-                inducedDrag = ply:GetInfoNum("fin3_induceddrag", 1) == 1
-            })
-        end
+        Fin3.new(owner, self.selectedEntity, {
+            upAxis = upAxis,
+            forwardAxis = forwardAxis,
+            finType = finType,
+            zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+            efficiency = owner:GetInfoNum("fin3_efficiency", 1),
+            inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1) == 1
+        })
 
         self:ClearSelection()
         self:SetStage(0)
@@ -139,6 +149,7 @@ end
 
 function TOOL:Think()
     if self:GetStage() == 0 then return end
+    if CLIENT then return end
 
     local selected = self.selectedEntity
 
@@ -160,8 +171,10 @@ function TOOL:Think()
         local upAxis = self.tempUpAxis
         local projectedVector = Fin3.projectVector(dirFromCenter, upAxis)
         self.tempForwardAxis = Fin3.roundVectorToAxis(projectedVector)
+        owner:SetNW2Vector("fin3_tempForwardAxis", self.tempForwardAxis)
     else
         self.tempForwardAxis = Fin3.projectVector(Fin3.worldToLocalVector(selected, tr.HitNormal), self.tempUpAxis):GetNormalized()
+        owner:SetNW2Vector("fin3_tempForwardAxis", self.tempForwardAxis)
     end
 end
 
@@ -178,15 +191,15 @@ function TOOL:RightClick(trace)
     local fin = Fin3.fins[ent]
 
     if fin then
-        local ply = self:GetOwner()
-        ply:ConCommand("fin3_fintype " .. fin.finType)
+        local owner = self:GetOwner()
+        owner:ConCommand("fin3_fintype " .. fin.finType)
 
         if fin.zeroLiftAngle and fin.zeroLiftAngle ~= 0 then
-            ply:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle)
+            owner:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle)
         end
 
-        ply:ConCommand("fin3_efficiency " .. fin.efficiency)
-        ply:ConCommand("fin3_induceddrag " .. (fin.inducedDrag and 1 or 0))
+        owner:ConCommand("fin3_efficiency " .. fin.efficiency)
+        owner:ConCommand("fin3_induceddrag " .. (fin.inducedDrag and 1 or 0))
     end
 
     return Fin3.allowedClasses[class]
@@ -201,13 +214,12 @@ function TOOL:Reload(trace)
     end
 
     local ent = trace.Entity
-    local class = ent:GetClass()
 
     if SERVER and Fin3.fins[ent] then
         Fin3.fins[ent]:remove()
     end
 
-    return Fin3.allowedClasses[class]
+    return (SERVER and Fin3.fins[ent]) or ent:GetNW2String("fin3_finType", "") ~= ""
 end
 
 function TOOL:Holster()

@@ -4,6 +4,10 @@ function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
 
+--- Calculates a value along a Catmull-Rom spline
+---@param points table Table of points to interpolate
+---@param pos number Position to interpolate at
+---@return number
 function Fin3.calcCatRomSpline(points, pos)
     local count = #points
 
@@ -64,6 +68,10 @@ end
 
 Fin3.createInterpolatedCurves()
 
+--- Calculates a value on an array of points using linear interpolation
+---@param points table Table of points to interpolate
+---@param pos number Position to interpolate at
+---@return number
 function Fin3.calcLinearInterp(points, pos)
     local curValue = points[floor(pos)] or points[1]
     local nextValue = points[ceil(pos)] or points[#points]
@@ -75,6 +83,9 @@ end
 
 -- Vector functions
 do
+    --- Rounds a direction vector to the nearest cardinal axis
+    ---@param v Vector Direction vector
+    ---@return Vector
     function Fin3.roundVectorToAxis(v)
         local absX, absY, absZ = abs(v.x), abs(v.y), abs(v.z)
 
@@ -123,6 +134,10 @@ if SERVER then
         phys:ApplyTorqueCenter(angf)
     end
 
+    --- Gets the linear velocity at a point on a rotating object
+    ---@param phys PhysObj Physics object
+    ---@param pos Vector Position to get the velocity at, in local space
+    ---@return Vector
     function Fin3.getRotInducedVel(phys, pos)
         if not IsValid(phys) then return Vector() end
 

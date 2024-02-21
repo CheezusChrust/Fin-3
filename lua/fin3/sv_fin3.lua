@@ -1,9 +1,26 @@
 local deg, rad, asin, cos, abs, sign, pi = math.deg, math.rad, math.asin, math.cos, math.abs, Fin3.sign, math.pi
 local localToWorldVector = Fin3.localToWorldVector
+local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
+local getRotInducedVel = Fin3.getRotInducedVel
+local calcLinearInterp = Fin3.calcLinearInterp
 local dt = engine.TickInterval()
 
+--[[
+Fin creation data table structure:
+    finType: string [model name]
+    upAxis: vector
+    forwardAxis: vector
+    inducedDrag: boolean
+    zeroLiftAngle: number [1 - 8]
+    efficiency: number [0.1 - 1.5]
+--]]
+
+--- Adds a new fin to an entity
+---@param ply Player Player that created the fin
+---@param ent Entity Entity to add the fin to
+---@param data table Fin creation data table
 function Fin3.new(ply, ent, data)
     if not Fin3.fins[ent] then
         local finLimit = GetConVar("sbox_max_fin3"):GetInt()
@@ -42,8 +59,8 @@ function Fin3.new(ply, ent, data)
 
     local obbSize = ent:OBBMaxs() - ent:OBBMins()
 
-    local span = abs(obbSize:Dot(Fin3.roundVectorToAxis(fin.rightAxis)))
-    local chord = abs(obbSize:Dot(Fin3.roundVectorToAxis(fin.forwardAxis)))
+    local span = abs(obbSize:Dot(roundVectorToAxis(fin.rightAxis)))
+    local chord = abs(obbSize:Dot(roundVectorToAxis(fin.forwardAxis)))
 
     fin.surfaceArea = span * chord * 0.00064516 -- in^2 to m^2
     fin.aspectRatio = span / chord
@@ -89,10 +106,10 @@ function Fin3.new(ply, ent, data)
 
         self.lastPos = curPos
 
-        return vel + Fin3.getRotInducedVel(self.phys, self.ent:WorldToLocal(curPos))
+        return vel + getRotInducedVel(self.phys, self.ent:WorldToLocal(curPos))
     end
 
-    -- Calculates velocity vector, squared velocity, angle of attack, and lift vector
+    --- Calculates velocity, angle of attack, and lift vector
     function fin:calcBaseData()
         local newRoot = getRootParent(self.ent) -- TODO: optimize this
 
@@ -105,8 +122,8 @@ function Fin3.new(ply, ent, data)
 
         if self.velVector == vector_origin then return end
 
-        self.forwardVel = self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.forwardAxis))
-        self.rightVel = self.velVector:Dot(Fin3.localToWorldVector(self.ent, self.rightAxis))
+        self.forwardVel = self.velVector:Dot(localToWorldVector(self.ent, self.forwardAxis))
+        self.rightVel = self.velVector:Dot(localToWorldVector(self.ent, self.rightAxis))
 
         local forwardAndRightVel = abs(self.forwardVel) + abs(self.rightVel)
         self.fwdVelRatio = self.forwardVel / forwardAndRightVel
@@ -131,7 +148,7 @@ function Fin3.new(ply, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local liftCoef = 0
-        local liftCoefFlat = Fin3.calcLinearInterp(flatModel.interpolatedCurves.lift, self.angleOfAttack + 91)
+        local liftCoefFlat = calcLinearInterp(flatModel.interpolatedCurves.lift, self.angleOfAttack + 91)
         local fwdVelRatio = 0
 
         if self.forwardVel > 0 and self.finType ~= "flat" then
@@ -145,7 +162,7 @@ function Fin3.new(ply, ent, data)
                 AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
             end
 
-            local liftCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.lift, AoAFinal + 91)
+            local liftCoefForward = calcLinearInterp(curModel.interpolatedCurves.lift, AoAFinal + 91)
 
             liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
         else
@@ -165,7 +182,7 @@ function Fin3.new(ply, ent, data)
         local flatModel = Fin3.models.flat
         local curModel = Fin3.models[self.finType]
         local dragCoef = 0
-        local dragCoefFlat = Fin3.calcLinearInterp(flatModel.interpolatedCurves.drag, self.angleOfAttack + 91)
+        local dragCoefFlat = calcLinearInterp(flatModel.interpolatedCurves.drag, self.angleOfAttack + 91)
 
         if self.forwardVel > 0 and self.finType ~= "flat" then
             local fwdVelRatio = self.fwdVelRatio
@@ -178,7 +195,7 @@ function Fin3.new(ply, ent, data)
                 AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
             end
 
-            local dragCoefForward = Fin3.calcLinearInterp(curModel.interpolatedCurves.drag, AoAFinal + 91)
+            local dragCoefForward = calcLinearInterp(curModel.interpolatedCurves.drag, AoAFinal + 91)
 
             dragCoef = abs((dragCoefForward * fwdVelRatio) + (dragCoefFlat * (1 - fwdVelRatio)))
         else

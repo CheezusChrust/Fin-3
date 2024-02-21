@@ -76,21 +76,22 @@ hook.Add("HUDPaint", "fin3_hud", function()
 
     if IsValid(wep) and wep:GetClass() == "gmod_tool" and ply:GetInfo("gmod_toolmode") == "fin3" then
         local eyeTrace = ply:GetEyeTrace()
-        local tool = ply:GetTool()
-        local selectedEntity = tool.selectedEntity
-        local tempUpAxis = tool.tempUpAxis
-        local tempForwardAxis = tool.tempForwardAxis
+        local selected = ply:GetNW2Entity("fin3_selectedEntity")
+        local ent = eyeTrace.Entity
 
-        local ent = selectedEntity or eyeTrace.Entity
+        if IsValid(selected) then
+            ent = selected
+        end
+
+        local tempUpAxis = ply:GetNW2Vector("fin3_tempUpAxis", vector_origin)
+        local tempForwardAxis = ply:GetNW2Vector("fin3_tempForwardAxis", vector_origin)
+
         if not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()] then return end
 
-        --local upAxis, forwardAxis = Fin3.getPropAxesFromTrace(eyeTrace)
-        --upAxis = Fin3.localToWorldVector(ent, upAxis)
-        --forwardAxis = Fin3.localToWorldVector(ent, forwardAxis)
         local centerPos = ent:LocalToWorld(ent:OBBCenter())
         local entSize = (ent:OBBMaxs() - ent:OBBMins()):Length() / 2
 
-        if tempUpAxis then
+        if tempUpAxis ~= vector_origin then
             local worldTempUpAxis = Fin3.localToWorldVector(ent, tempUpAxis)
 
             cam.Start3D()
@@ -102,7 +103,7 @@ hook.Add("HUDPaint", "fin3_hud", function()
             draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
         end
 
-        if tempForwardAxis then
+        if tempForwardAxis ~= vector_origin then
             if tempForwardAxis ~= vector_origin and tempForwardAxis ~= tempUpAxis then
                 local worldTempForwardAxis = Fin3.localToWorldVector(ent, tempForwardAxis)
 

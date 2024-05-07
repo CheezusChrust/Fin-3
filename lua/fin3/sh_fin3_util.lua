@@ -146,4 +146,27 @@ if SERVER then
         v = Fin3.localToWorldVector(phys:GetEntity(), v)
         return v
     end
+
+    function Fin3.transmitFin(ent)
+        net.Start("fin3_networkfinids")
+        net.WriteUInt(1, 10)
+        net.WriteUInt(ent:EntIndex(), 13)
+        net.Broadcast()
+    end
+
+    function Fin3.transmitAllFins(ply)
+        net.Start("fin3_networkfinids")
+        net.WriteUInt(table.Count(Fin3.fins), 10)
+
+        for _, fin in pairs(Fin3.fins) do
+            net.WriteUInt(fin.ent:EntIndex(), 13)
+        end
+
+        net.Send(ply)
+    end
+else
+    function Fin3.requestAllFins()
+        net.Start("fin3_networkfinids")
+        net.SendToServer()
+    end
 end

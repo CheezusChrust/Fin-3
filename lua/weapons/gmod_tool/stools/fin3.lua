@@ -30,20 +30,20 @@ if CLIENT then
 
     language.Add("tool.fin3.fintype", "Airfoil Type")
 
-    language.Add("tool.fin3.fintype.specificsettings", "Airfoil settings:")
+    language.Add("tool.fin3.fintype.specificsettings", "Airfoil Settings:")
     language.Add("tool.fin3.fintype.specificsettings.zeroliftangle", "Zero Lift Angle")
 
-    language.Add("tool.fin3.efficiency", "Efficiency")
+    language.Add("tool.fin3.efficiency", "Efficiency Mul")
     language.Add("tool.fin3.efficiency.info",
         "Calculated lift and drag forces are multiplied by this value. " ..
-        "Base lift and drag are determined by the surface area of the fin. 1 is default, and is the most realistic."
+        "Base lift and drag are determined by the surface area of the fin. A value of 1 is closest to real life."
     )
 
-    language.Add("tool.fin3.induceddrag", "Induced Drag")
+    language.Add("tool.fin3.induceddrag", "Induced Drag Mul")
     language.Add("tool.fin3.induceddrag.info",
-        "Induced drag is a byproduct of lift, and should generally be enabled for aircraft. " ..
-        "Fins with a higher aspect ratio (span/chord) will have less induced drag. " ..
-        "Server operators can forcibly enable this setting."
+        "Induced drag is a byproduct of lift, and is inversely proportional to the aspect ratio of the fin. " ..
+        "A fin with a long span and short cord, like on a glider, will have a high aspect ratio and thus low induced drag. " ..
+        "This slider multiplies the final induced drag coefficient."
     )
 
     language.Add("tool.fin3.debug", "Debug")
@@ -95,13 +95,13 @@ function TOOL:LeftClick(trace)
 
     if stage == 0 then
         if SERVER and Fin3.fins[ent] then
-            Fin3.new(owner, ent, {
+            Fin3.fin:new(owner, ent, {
                 upAxis = Fin3.fins[ent].upAxis,
                 forwardAxis = Fin3.fins[ent].forwardAxis,
                 finType = finType,
                 zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
                 efficiency = owner:GetInfoNum("fin3_efficiency", 1),
-                inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1) == 1
+                inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1)
             })
 
             return true
@@ -131,13 +131,13 @@ function TOOL:LeftClick(trace)
             return true
         end
 
-        Fin3.new(owner, self.selectedEntity, {
+        Fin3.fin:new(owner, self.selectedEntity, {
             upAxis = upAxis,
             forwardAxis = forwardAxis,
             finType = finType,
             zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
             efficiency = owner:GetInfoNum("fin3_efficiency", 1),
-            inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1) == 1
+            inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1)
         })
 
         self:ClearSelection()
@@ -199,7 +199,7 @@ function TOOL:RightClick(trace)
         end
 
         owner:ConCommand("fin3_efficiency " .. fin.efficiency)
-        owner:ConCommand("fin3_induceddrag " .. (fin.inducedDrag and 1 or 0))
+        owner:ConCommand("fin3_induceddrag " .. fin.inducedDrag)
     end
 
     return Fin3.allowedClasses[class]
@@ -353,15 +353,7 @@ function TOOL.BuildCPanel(cp)
     createSlider(cp, "#tool.fin3.efficiency", 0.1, 1.5, 2, "fin3_efficiency")
     createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault"):DockMargin(20, 0, 20, 10)
 
-    local inducedDragCheckbox = createCheckbox(cp, "#tool.fin3.induceddrag", "fin3_induceddrag")
-    inducedDragCheckbox:SetDisabled(GetConVar("fin3_forceinduceddrag"):GetBool())
-
-    net.Receive("fin3_forceinduceddrag", function()
-        if IsValid(inducedDragCheckbox) then
-            inducedDragCheckbox:SetDisabled(net.ReadBool())
-        end
-    end)
-
+    createSlider(cp, "#tool.fin3.induceddrag", 0, 1, 2, "fin3_induceddrag")
     createLabel(cp, "#tool.fin3.induceddrag.info", "DermaDefault"):DockMargin(20, 10, 20, 10)
 
     local debugCheckbox = createCheckbox(cp, "#tool.fin3.debug", "fin3_debug")
@@ -391,8 +383,13 @@ function TOOL.BuildCPanel(cp)
 
         cvars.RemoveChangeCallback("fin3_debug", "fin3_debug_callback")
         cvars.AddChangeCallback("fin3_debug", function(_, _, debug)
-            debugCheckbox:SetChecked(tobool(debug))
-            showDebugOptions(tobool(debug))
+            local enable = debug == "1"
+            debugCheckbox:SetChecked(enable)
+            showDebugOptions(enable)
+
+            if enable then
+                Fin3.requestAllFins()
+            end
         end, "fin3_debug_callback")
     end
 

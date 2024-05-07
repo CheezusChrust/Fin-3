@@ -1,12 +1,8 @@
 local fins = {}
 
-net.Receive("fin3_sendfins", function()
-    fins = {}
-
-    local count = net.ReadUInt(12)
-
-    for _ = 1, count do
-        fins[#fins + 1] = net.ReadEntity()
+net.Receive("fin3_networkfinids", function()
+    for _ = 1, net.ReadUInt(10) do
+        fins[net.ReadUInt(13)] = true
     end
 end)
 
@@ -29,43 +25,48 @@ end
 
 hook.Add("HUDPaint", "fin3_hud", function()
     if cvarDebugEnabled:GetBool() then
-        if cvarShowVectors:GetBool() then
-            for _, fin in pairs(fins) do
-                if IsValid(fin) then
-                    local finPos = fin:GetPos()
+        local showVectors = cvarShowVectors:GetBool()
+        local showForces = cvarShowForces:GetBool()
 
-                    local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
-                    local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
+        if showVectors or showForces then
+            for index in pairs(fins) do
+                local fin = Entity(index)
 
-                    if liftVector ~= vector_origin or dragVector ~= vector_origin then
-                        cam.Start3D()
-                            render.SetColorMaterialIgnoreZ()
-                            render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, GREEN)
-                            render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, RED)
-                        cam.End3D()
+                if not IsValid(fin) or fin:GetNW2String("fin3_finType") == "" then
+                    fins[index] = nil
+                else
+                    if showVectors then
+                        local finPos = fin:GetPos()
+
+                        local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
+                        local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
+
+                        if liftVector ~= vector_origin or dragVector ~= vector_origin then
+                            cam.Start3D()
+                                render.SetColorMaterialIgnoreZ()
+                                render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, GREEN)
+                                render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, RED)
+                            cam.End3D()
+                        end
                     end
-                end
-            end
-        end
 
-        if cvarShowForces:GetBool() then
-            for _, fin in pairs(fins) do
-                if IsValid(fin) and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
-                    local screenPos = fin:LocalToWorld(fin:OBBCenter()):ToScreen()
+                    if showForces and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                        local screenPos = fin:LocalToWorld(fin:OBBCenter()):ToScreen()
 
-                    local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
-                    local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
-                    local liftForceStr = getForceString(liftVector:Length())
-                    local dragForceStr = getForceString(dragVector:Length())
+                        local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
+                        local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
+                        local liftForceStr = getForceString(liftVector:Length())
+                        local dragForceStr = getForceString(dragVector:Length())
 
-                    local text = string.format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
-                    surface.SetFont("Trebuchet18")
-                    local textWidth, textHeight = surface.GetTextSize(text)
-                    textWidth = textWidth + 10
-                    textHeight = textHeight + 10
+                        local text = string.format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
+                        surface.SetFont("Trebuchet18")
+                        local textWidth, textHeight = surface.GetTextSize(text)
+                        textWidth = textWidth + 10
+                        textHeight = textHeight + 10
 
-                    draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
-                    draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
+                        draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
+                        draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
+                    end
                 end
             end
         end
@@ -136,7 +137,7 @@ hook.Add("HUDPaint", "fin3_hud", function()
         local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
         local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
         local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
-        local inducedDrag = ent:GetNW2Bool("fin3_inducedDrag", true)
+        local inducedDrag = ent:GetNW2Float("fin3_inducedDrag", 0)
 
         cam.Start3D()
             render.SetColorMaterialIgnoreZ()
@@ -153,13 +154,13 @@ hook.Add("HUDPaint", "fin3_hud", function()
         surface.SetFont("Trebuchet18")
         local infoPos = centerPos:ToScreen()
 
-        local text = string.format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %s",
+        local text = string.format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
             language.GetPhrase("tool.fin3.fintype." .. finType),
             zeroLiftAngle ~= 0 and string.format("Zero Lift Angle: -%.1f°\n", zeroLiftAngle) or "",
             efficiency,
             surfaceArea * efficiency,
             aspectRatio,
-            inducedDrag and "Enabled" or "Disabled"
+            inducedDrag
         )
         local textWidth, textHeight = surface.GetTextSize(text)
 

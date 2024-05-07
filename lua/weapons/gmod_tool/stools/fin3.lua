@@ -42,7 +42,7 @@ if CLIENT then
     language.Add("tool.fin3.induceddrag", "Induced Drag Mul")
     language.Add("tool.fin3.induceddrag.info",
         "Induced drag is a byproduct of lift, and is inversely proportional to the aspect ratio of the fin. " ..
-        "A fin with a long span and short cord, like on a glider, will have a high aspect ratio and thus low induced drag. " ..
+        "A fin with a long span and short chord, like on a glider, will have a high aspect ratio and thus low induced drag. " ..
         "This slider multiplies the final induced drag coefficient."
     )
 

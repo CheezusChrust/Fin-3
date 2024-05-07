@@ -35,9 +35,9 @@ hook.Add("HUDPaint", "fin3_hud", function()
                 if not IsValid(fin) or fin:GetNW2String("fin3_finType") == "" then
                     fins[index] = nil
                 else
-                    if showVectors then
-                        local finPos = fin:GetPos()
+                    local finPos = fin:LocalToWorld(fin:OBBCenter())
 
+                    if showVectors then
                         local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
                         local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
 
@@ -51,7 +51,7 @@ hook.Add("HUDPaint", "fin3_hud", function()
                     end
 
                     if showForces and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
-                        local screenPos = fin:LocalToWorld(fin:OBBCenter()):ToScreen()
+                        local screenPos = finPos:ToScreen()
 
                         local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
                         local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)

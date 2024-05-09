@@ -84,6 +84,8 @@ hook.Add("HUDPaint", "fin3_hud", function()
             ent = selected
         end
 
+        if not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()] then return end
+
         local fin2Eff = ent:GetNWFloat("efficency", 0)
         if fin2Eff ~= 0 and fin2Eff ~= -99 and fin2Eff ~= -100000000 then
             local drawPos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
@@ -92,8 +94,6 @@ hook.Add("HUDPaint", "fin3_hud", function()
 
         local tempUpAxis = ply:GetNW2Vector("fin3_tempUpAxis", vector_origin)
         local tempForwardAxis = ply:GetNW2Vector("fin3_tempForwardAxis", vector_origin)
-
-        if not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()] then return end
 
         local centerPos = ent:LocalToWorld(ent:OBBCenter())
         local entSize = (ent:OBBMaxs() - ent:OBBMins()):Length() / 2

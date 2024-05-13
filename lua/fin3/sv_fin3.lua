@@ -41,6 +41,7 @@ function Fin3.fin:new(ply, ent, data)
     setmetatable(fin, {__index = Fin3.fin})
 
     fin.ent = ent
+    fin.owner = ply
     fin.massCenter = ent:GetPhysicsObject():GetMassCenter()
     fin.upAxis = data.upAxis
     fin.forwardAxis = data.forwardAxis
@@ -292,8 +293,9 @@ function Fin3.fin:remove()
 
     Fin3.fins[self.ent] = nil
 
-    if IsValid(ply) and Fin3.playerFinCount[ply] then
-        Fin3.playerFinCount[ply] = Fin3.playerFinCount[ply] - 1
+    local owner = self.owner
+    if IsValid(owner) and Fin3.playerFinCount[owner] then
+        Fin3.playerFinCount[owner] = Fin3.playerFinCount[owner] - 1
     end
 
     duplicator.ClearEntityModifier(self.ent, "fin3")

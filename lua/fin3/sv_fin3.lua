@@ -74,7 +74,9 @@ function Fin3.fin:new(ply, ent, data)
 
     fin.liftVector = vector_origin
     fin.liftForceNewtons = 0
+    fin.lastLiftForceNewtons = 0
     fin.liftInducedDragCoef = 0
+    fin.lastDragForceNewtons = 0
     fin.dragForceNewtons = 0
 
     fin.lastPos = ent:GetPos()
@@ -217,7 +219,12 @@ function Fin3.fin:calcLiftForceNewtons()
         self.liftInducedDragCoef = (liftCoef ^ 2) / (pi * aspectRatio * Fin3.finEfficiency) * inducedDrag
     end
 
-    self.liftForceNewtons = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
+    local lift = 0.5 * liftCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
+
+    -- low pass filter
+    -- self.liftForceNewtons = self.lastLiftForceNewtons * (1 - alpha) + lift * alpha
+    self.liftForceNewtons = self.lastLiftForceNewtons * 0.5 + lift * 0.5
+    self.lastLiftForceNewtons = self.liftForceNewtons
 end
 
 function Fin3.fin:calcDragForceNewtons()
@@ -246,7 +253,10 @@ function Fin3.fin:calcDragForceNewtons()
 
     dragCoef = dragCoef + self.liftInducedDragCoef
 
-    self.dragForceNewtons = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
+    local drag = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
+
+    self.dragForceNewtons = self.lastDragForceNewtons * 0.5 + drag * 0.5
+    self.lastDragForceNewtons = self.dragForceNewtons
 end
 
 function Fin3.fin:applyForce(force)

@@ -46,6 +46,14 @@ if CLIENT then
         "This slider multiplies the final induced drag coefficient."
     )
 
+    language.Add("tool.fin3.advanced", "Advanced Settings")
+    language.Add("tool.fin3.advanced.lowpass", "Low-pass Filter")
+    language.Add("tool.fin3.advanced.lowpass.info",
+        "Enable this if your contraption starts shaking violently in certain situations. " ..
+        "This will make the calculations more stable, but less accurate. " ..
+        "Mostly needed on low mass, high surface area/high speed contraptions."
+    )
+
     language.Add("tool.fin3.debug", "Debug")
     language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
     language.Add("tool.fin3.debug.options", "Debug options:")
@@ -101,7 +109,8 @@ function TOOL:LeftClick(trace)
                 finType = finType,
                 zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
                 efficiency = owner:GetInfoNum("fin3_efficiency", 1),
-                inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1)
+                inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
+                lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
             })
 
             return true
@@ -137,7 +146,8 @@ function TOOL:LeftClick(trace)
             finType = finType,
             zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
             efficiency = owner:GetInfoNum("fin3_efficiency", 1),
-            inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1)
+            inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
+            lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
         })
 
         self:ClearSelection()
@@ -200,6 +210,7 @@ function TOOL:RightClick(trace)
 
         owner:ConCommand("fin3_efficiency " .. fin.efficiency)
         owner:ConCommand("fin3_induceddrag " .. fin.inducedDrag)
+        owner:ConCommand("fin3_lowpass " .. (fin.lowpass and 1 or 0))
     end
 
     return Fin3.allowedClasses[class]
@@ -355,6 +366,29 @@ function TOOL.BuildCPanel(cp)
 
     createSlider(cp, "#tool.fin3.induceddrag", 0, 1, 2, "fin3_induceddrag")
     createLabel(cp, "#tool.fin3.induceddrag.info", "DermaDefault"):DockMargin(20, 10, 20, 10)
+
+    local advancedCheckbox = createCheckbox(cp, "#tool.fin3.advanced")
+
+    do -- Advanced settings
+        local advancedSettingsContainer = vgui.Create("DPanel", cp)
+        advancedSettingsContainer:Dock(TOP)
+        advancedSettingsContainer:DockMargin(20, 5, 20, 0)
+        advancedSettingsContainer:SetTall(104)
+
+        createCheckbox(advancedSettingsContainer, "#tool.fin3.advanced.lowpass", "fin3_lowpass")
+        createLabel(advancedSettingsContainer, "#tool.fin3.advanced.lowpass.info", "DermaDefault"):DockMargin(20, 5, 10, 0)
+
+        local function showAdvancedSettings(show)
+            advancedSettingsContainer:SetVisible(show)
+            cp:InvalidateLayout()
+        end
+
+        showAdvancedSettings(false)
+
+        function advancedCheckbox:OnChange()
+            showAdvancedSettings(self:GetChecked())
+        end
+    end
 
     local debugCheckbox = createCheckbox(cp, "#tool.fin3.debug", "fin3_debug")
     createLabel(cp, "#tool.fin3.debug.info", "DermaDefault"):DockMargin(20, 10, 20, 0)

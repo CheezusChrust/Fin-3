@@ -17,6 +17,7 @@ Fin creation data table structure:
     inducedDrag: number [0 - 1]
     zeroLiftAngle: number [1 - 8]
     efficiency: number [0.1 - 1.5]
+    lowpass: boolean
 --]]
 
 --- Adds a new fin to an entity
@@ -65,6 +66,8 @@ function Fin3.fin:new(ply, ent, data)
         end
     end
 
+    fin.lowpass = data.lowpass or false
+
     fin:calcSurfaceArea()
 
     fin.velVector = vector_origin
@@ -98,6 +101,7 @@ function Fin3.fin:new(ply, ent, data)
     ent:SetNW2Float("fin3_zeroLiftAngle", fin.zeroLiftAngle)
     ent:SetNW2Float("fin3_efficiency", fin.efficiency)
     ent:SetNW2Float("fin3_inducedDrag", fin.inducedDrag)
+    ent:SetNW2Bool("fin3_lowpass", fin.lowpass)
 
     fin.rootPhys = rootPhys
 
@@ -223,7 +227,7 @@ function Fin3.fin:calcLiftForceNewtons()
 
     -- low pass filter
     -- self.liftForceNewtons = self.lastLiftForceNewtons * (1 - alpha) + lift * alpha
-    self.liftForceNewtons = self.lastLiftForceNewtons * 0.5 + lift * 0.5
+    self.liftForceNewtons = self.lowpass and (self.lastLiftForceNewtons * 0.5 + lift * 0.5) or lift
     self.lastLiftForceNewtons = self.liftForceNewtons
 end
 
@@ -255,7 +259,7 @@ function Fin3.fin:calcDragForceNewtons()
 
     local drag = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
 
-    self.dragForceNewtons = self.lastDragForceNewtons * 0.5 + drag * 0.5
+    self.dragForceNewtons = self.lowpass and (self.lastDragForceNewtons * 0.5 + drag * 0.5) or drag
     self.lastDragForceNewtons = self.dragForceNewtons
 end
 

@@ -138,6 +138,7 @@ hook.Add("HUDPaint", "fin3_hud", function()
         local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
         local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
         local inducedDrag = ent:GetNW2Float("fin3_inducedDrag", 0)
+        local lowpass = ent:GetNW2Bool("fin3_lowpass", false)
 
         cam.Start3D()
             render.SetColorMaterialIgnoreZ()
@@ -162,6 +163,11 @@ hook.Add("HUDPaint", "fin3_hud", function()
             aspectRatio,
             inducedDrag
         )
+
+        if lowpass then
+            text = text .. "\nLow-pass filter enabled"
+        end
+
         local textWidth, textHeight = surface.GetTextSize(text)
 
         draw.RoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, BACKGROUND, false, true, true, true)

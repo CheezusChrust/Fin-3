@@ -125,24 +125,3 @@ Fin3.models = {
 }
 
 if Fin3.createInterpolatedCurves then Fin3.createInterpolatedCurves() end
-
-if CLIENT then
-    language.Add("tool.fin3.fintype.flat", "Flat Plate")
-    language.Add("tool.fin3.fintype.flat.info",
-        "Flat plates stall at a very low AoA (around 5 degrees), and have much higher drag than conventional airfoils when at any AoA higher than 0. " ..
-        "Generally not recommended for most aircraft as flat plates have poor flight characteristics."
-    )
-
-    language.Add("tool.fin3.fintype.symmetrical", "Symmetrical")
-    language.Add("tool.fin3.fintype.symmetrical.info",
-        "Symmetrical airfoils do not produce lift at 0 AoA, and can resist stalling up to around 15 degrees. " ..
-        "They have equal performance for negative and positive AoAs, so are recommended for control surfaces."
-    )
-
-    language.Add("tool.fin3.fintype.cambered", "Cambered")
-    language.Add("tool.fin3.fintype.cambered.info",
-        "Cambered airfoils produce a lifting force at 0 AoA, and can resist stalling up to around 15 degrees. " ..
-        "Recommended for the main wing of an aircraft as it has much better performance with a positive AoA.\n" ..
-        "The zero lift angle determines the negative AoA at which the wing produces no lift."
-    )
-end

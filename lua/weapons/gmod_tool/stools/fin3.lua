@@ -11,54 +11,6 @@ if CLIENT then
         { name = "stage1.definefwd2", icon = "gui/lmb.png", icon2 = "gui/info", stage = 1 },
         { name = "stage1.reload", icon = "gui/r.png", stage = 1 }
     }
-
-    language.Add("tool.fin3.name", "Fin 3")
-    language.Add("tool.fin3.desc", "Turn any prop into a simulated fin")
-    language.Add("tool.fin3.left", "Create or update a fin - first click defines the up axis when creating a new fin")
-    language.Add("tool.fin3.right", "Copy fin settings")
-    language.Add("tool.fin3.reload", "Remove fin from prop")
-
-    language.Add("tool.fin3.stage1.definefwd", "Define the fin's forward vector based on your aim pos")
-    language.Add("tool.fin3.stage1.definefwd2", "(Hold SPRINT) Define the fin's forward vector based on the hit normal of the tooled surface")
-    language.Add("tool.fin3.stage1.reload", "Cancel fin creation")
-
-    language.Add("tool.fin3.info",
-        "Important Info!\n" ..
-        "\"Angle of Attack\", or AoA, refers to the angle of the fin compared to the angle of the airflow.\n\n" ..
-        "If the AoA is too high, the fin will begin to stall, and subsequently lose lift and gain drag."
-    )
-
-    language.Add("tool.fin3.fintype", "Airfoil Type")
-
-    language.Add("tool.fin3.fintype.specificsettings", "Airfoil Settings:")
-    language.Add("tool.fin3.fintype.specificsettings.zeroliftangle", "Zero Lift Angle")
-
-    language.Add("tool.fin3.efficiency", "Efficiency Mul")
-    language.Add("tool.fin3.efficiency.info",
-        "Calculated lift and drag forces are multiplied by this value. " ..
-        "Base lift and drag are determined by the surface area of the fin. A value of 1 is closest to real life."
-    )
-
-    language.Add("tool.fin3.induceddrag", "Induced Drag Mul")
-    language.Add("tool.fin3.induceddrag.info",
-        "Induced drag is a byproduct of lift, and is inversely proportional to the aspect ratio of the fin. " ..
-        "A fin with a long span and short chord, like on a glider, will have a high aspect ratio and thus low induced drag. " ..
-        "This slider multiplies the final induced drag coefficient."
-    )
-
-    language.Add("tool.fin3.advanced", "Advanced Settings")
-    language.Add("tool.fin3.advanced.lowpass", "Low-pass Filter")
-    language.Add("tool.fin3.advanced.lowpass.info",
-        "Enable this if your contraption starts shaking violently in certain situations. " ..
-        "This will make the calculations more stable, but less accurate. " ..
-        "Mostly needed on low mass, high surface area/high speed contraptions."
-    )
-
-    language.Add("tool.fin3.debug", "Debug")
-    language.Add("tool.fin3.debug.info", "Draws debug information on all fins.")
-    language.Add("tool.fin3.debug.options", "Debug options:")
-    language.Add("tool.fin3.debug.showvectors", "Display lift/drag vectors")
-    language.Add("tool.fin3.debug.showforces", "Display lift/drag force values")
 end
 
 function TOOL:SelectEntity(ent)

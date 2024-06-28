@@ -27,16 +27,4 @@ else
     CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
     CreateClientConVar("fin3_debug_showvectors", "1", true, true, "Whether or not to draw the lift and drag vectors", 0, 1)
     CreateClientConVar("fin3_debug_showforces", "1", true, true, "Whether or not to display forces applied for lift and drag", 0, 1)
-
-    surface.CreateFont("fin3_bigtext", {
-        font = "Roboto",
-        size = 24,
-        weight = 850
-    })
-
-    surface.CreateFont("fin3_labeltext", {
-        font = "Roboto",
-        size = 16,
-        weight = 550
-    })
 end

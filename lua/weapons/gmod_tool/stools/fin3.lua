@@ -193,110 +193,35 @@ end
 
 if SERVER then return end
 
-
-local function createLabel(parent, text, font)
-    local label = vgui.Create("DLabel", parent)
-    label:SetText(text)
-    label:SetFont(font or "fin3_labeltext")
-    label:SetColor(Color(0, 0, 0))
-    label:Dock(TOP)
-    label:SetWrap(true)
-    label:DockMargin(10, 10, 10, 0)
-    label:SetAutoStretchVertical(true)
-
-    return label
-end
-
-local function createSlider(parent, text, min, max, decimals, convar)
-    local slider = vgui.Create("DNumSlider", parent)
-    slider:Dock(TOP)
-    slider.Label:SetColor(Color(0, 0, 0))
-    slider.Label:SetFont("fin3_labeltext")
-    slider:DockMargin(10, 10, 10, 0)
-    slider:SetText(text)
-    slider:SetMin(min)
-    slider:SetMax(max)
-    slider:SetDecimals(decimals)
-    slider:SetConVar(convar)
-
-    return slider
-end
-
-local function createCheckbox(parent, text, convar)
-    local checkbox = vgui.Create("DCheckBoxLabel", parent)
-    checkbox:Dock(TOP)
-    checkbox:DockMargin(10, 10, 10, 0)
-    checkbox:SetText(text)
-    checkbox.Label:SetFont("fin3_labeltext")
-    checkbox.Label:SetColor(Color(0, 0, 0))
-    checkbox:SetConVar(convar)
-
-    return checkbox
-end
-
 function TOOL.BuildCPanel(cp)
-    createLabel(cp, "#tool.fin3.desc", "fin3_bigtext")
+    local panel = vgui.Create("fin3_panel", cp)
+    panel:Dock(TOP)
+    panel:DockMargin(10, 0, 10, 0)
 
-    local infoPanel = vgui.Create("DPanel", cp)
-    infoPanel:Dock(TOP)
-    infoPanel:DockMargin(10, 10, 10, 0)
+    panel:AddTitle("#tool.fin3.desc")
+    panel:AddInfoBox("#tool.fin3.info")
 
-    local infoPanelText = createLabel(infoPanel, "#tool.fin3.info")
-    infoPanelText:DockMargin(5, 5, 5, 0)
-
-    local oldPerformLayout = infoPanel.PerformLayout
-    function infoPanel:PerformLayout()
-        oldPerformLayout(self)
-
-        local _, textHeight = infoPanelText:GetTextSize()
-
-        self:SetTall(textHeight + 10)
-    end
-
-    do -- Fin type selection and fin type specific settings
-        local optionsDropdownContainer = vgui.Create("DPanel", cp)
-        optionsDropdownContainer:Dock(TOP)
-        optionsDropdownContainer:DockMargin(10, 10, 10, 0)
-        optionsDropdownContainer:SetTall(16)
-        optionsDropdownContainer.Paint = function() end
-
-        local optionsLabel = createLabel(optionsDropdownContainer, "#tool.fin3.fintype")
-        optionsLabel:Dock(LEFT)
-        optionsLabel:DockMargin(0, 0, 0, 0)
-
-        local finTypeSelection = vgui.Create("DComboBox", optionsDropdownContainer)
-        finTypeSelection:SetValue("#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString())
+    -- Fin type selection and per-type settings
+    do
+        local currentFinType = GetConVar("fin3_fintype"):GetString()
+        local finTypeSelection = panel:AddComboBox("#tool.fin3.fintype", "#tool.fin3.fintype." .. currentFinType)
 
         for name in pairs(Fin3.models) do
-            finTypeSelection:AddChoice(string.format("#tool.fin3.fintype.%s", name), name)
+            finTypeSelection:AddChoice("#tool.fin3.fintype." .. name, name)
         end
 
-        finTypeSelection:Dock(RIGHT)
-        finTypeSelection:SetWide(160)
+        local finTypeHelpText = panel:AddHelpText("#tool.fin3.fintype." .. currentFinType .. ".info")
+        finTypeHelpText:DockMargin(10, 10, 10, 0)
+        local camberedSettingsContainer = panel:AddHideableContainer()
+        camberedSettingsContainer:AddLabel("#tool.fin3.fintype.specificsettings"):DockMargin(5, 5, 5, 0)
+        camberedSettingsContainer:AddSlider("#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 8, 1, "fin3_zeroliftangle"):DockMargin(5, 0, 0, 0)
+        camberedSettingsContainer:SetVisible(currentFinType == "cambered")
 
-        local finTypeHelperText = createLabel(cp, "#tool.fin3.fintype." .. GetConVar("fin3_fintype"):GetString() .. ".info", "DermaDefault")
-        finTypeHelperText:DockMargin(20, 10, 20, 0)
-
-        local camberedWingSettingsContainer = vgui.Create("DPanel", cp)
-        camberedWingSettingsContainer:Dock(TOP)
-        camberedWingSettingsContainer:DockMargin(20, 10, 20, 0)
-        camberedWingSettingsContainer:SetTall(48)
-
-        createLabel(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings", "fin3_labeltext"):DockMargin(5, 5, 5, 0)
-        createSlider(camberedWingSettingsContainer, "#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 8, 1, "fin3_zeroliftangle"):DockMargin(5, -5, 5, 0)
-
-        local function showCamberedWingSettings(show)
-            camberedWingSettingsContainer:SetVisible(show)
-            cp:InvalidateLayout()
-        end
-
-        showCamberedWingSettings(GetConVar("fin3_fintype"):GetString() == "cambered")
-
-        function finTypeSelection:OnSelect(_, _, finType)
-            RunConsoleCommand("fin3_fintype", finType)
-            finTypeHelperText:SetText("#tool.fin3.fintype." .. finType .. ".info")
-
-            showCamberedWingSettings(finType == "cambered")
+        function finTypeSelection:OnSelect(_, _, data)
+            finTypeHelpText:SetText("#tool.fin3.fintype." .. data .. ".info")
+            camberedSettingsContainer:SetVisible(data == "cambered")
+            RunConsoleCommand("fin3_fintype", data)
+            panel:InvalidateLayout()
         end
 
         cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
@@ -306,78 +231,60 @@ function TOOL.BuildCPanel(cp)
                 RunConsoleCommand("fin3_fintype", oldFinType)
             else
                 finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
-                finTypeHelperText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
+                finTypeHelpText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
 
-                showCamberedWingSettings(newFinType == "cambered")
+                camberedSettingsContainer:SetVisible(newFinType == "cambered")
+                panel:InvalidateLayout()
             end
         end, "fin3_fintype_callback")
     end
 
-    createSlider(cp, "#tool.fin3.efficiency", 0.1, 1.5, 2, "fin3_efficiency")
-    createLabel(cp, "#tool.fin3.efficiency.info", "DermaDefault"):DockMargin(20, 0, 20, 10)
+    panel:AddSlider("#tool.fin3.efficiency", 0.1, 1.5, 2, "fin3_efficiency"):DockMargin(0, 0, 0, 0)
+    panel:AddHelpText("#tool.fin3.efficiency.info")
 
-    createSlider(cp, "#tool.fin3.induceddrag", 0, 1, 2, "fin3_induceddrag")
-    createLabel(cp, "#tool.fin3.induceddrag.info", "DermaDefault"):DockMargin(20, 10, 20, 10)
+    panel:AddSlider("#tool.fin3.induceddrag", 0, 1, 2, "fin3_induceddrag"):DockMargin(0, 0, 0, 0)
+    panel:AddHelpText("#tool.fin3.induceddrag.info")
 
-    local advancedCheckbox = createCheckbox(cp, "#tool.fin3.advanced")
-
-    do -- Advanced settings
-        local advancedSettingsContainer = vgui.Create("DPanel", cp)
-        advancedSettingsContainer:Dock(TOP)
-        advancedSettingsContainer:DockMargin(20, 5, 20, 0)
-        advancedSettingsContainer:SetTall(104)
-
-        createCheckbox(advancedSettingsContainer, "#tool.fin3.advanced.lowpass", "fin3_lowpass")
-        createLabel(advancedSettingsContainer, "#tool.fin3.advanced.lowpass.info", "DermaDefault"):DockMargin(20, 5, 10, 0)
-
-        local function showAdvancedSettings(show)
-            advancedSettingsContainer:SetVisible(show)
-            cp:InvalidateLayout()
-        end
-
-        showAdvancedSettings(false)
+    -- Advanced settings
+    do
+        local advancedCheckbox = panel:AddCheckbox("#tool.fin3.advanced")
+        advancedCheckbox:SetValue(false)
+        local advancedSettingsContainer = panel:AddHideableContainer()
+        advancedSettingsContainer:AddCheckbox("#tool.fin3.advanced.lowpass", "fin3_lowpass"):DockMargin(5, 5, 5, 0)
+        advancedSettingsContainer:AddHelpText("#tool.fin3.advanced.lowpass.info"):DockMargin(10, 5, 10, 5)
+        advancedSettingsContainer:SetVisible(false)
 
         function advancedCheckbox:OnChange()
-            showAdvancedSettings(self:GetChecked())
+            advancedSettingsContainer:SetVisible(self:GetChecked())
+            panel:InvalidateLayout()
         end
     end
 
-    local debugCheckbox = createCheckbox(cp, "#tool.fin3.debug", "fin3_debug")
-    createLabel(cp, "#tool.fin3.debug.info", "DermaDefault"):DockMargin(20, 10, 20, 0)
-
-    do -- Options specific to debug mode
-        local debugOptionsContainer = vgui.Create("DPanel", cp)
-        debugOptionsContainer:Dock(TOP)
-        debugOptionsContainer:DockMargin(20, 10, 20, 0)
-        debugOptionsContainer:SetTall(80)
-
-        local debugOptionsLabel = createLabel(debugOptionsContainer, "#tool.fin3.debug.options")
-        debugOptionsLabel:Dock(TOP)
-        debugOptionsLabel:DockMargin(5, 5, 5, 0)
-
-        createCheckbox(debugOptionsContainer, "#tool.fin3.debug.showvectors", "fin3_debug_showvectors")
-        createCheckbox(debugOptionsContainer, "#tool.fin3.debug.showforces", "fin3_debug_showforces")
-
-        local function showDebugOptions(show)
-            debugOptionsContainer:SetVisible(show)
-            cp:InvalidateLayout()
-        end
+    -- Debug settings
+    do
+        local debugEnabled = GetConVar("fin3_debug"):GetBool()
+        local debugCheckbox = panel:AddCheckbox("#tool.fin3.debug", "fin3_debug")
+        debugCheckbox:SetValue(debugEnabled)
+        local debugContainer = panel:AddHideableContainer()
+        debugContainer:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_debug_showvectors"):DockMargin(5, 5, 5, 5)
+        debugContainer:AddCheckbox("#tool.fin3.debug.showforces", "fin3_debug_showforces"):DockMargin(5, 5, 5, 5)
+        debugContainer:SetVisible(notdebugEnabled)
 
         function debugCheckbox:OnChange()
-            showDebugOptions(self:GetChecked())
+            debugContainer:SetVisible(self:GetChecked())
+            panel:InvalidateLayout()
         end
 
         cvars.RemoveChangeCallback("fin3_debug", "fin3_debug_callback")
         cvars.AddChangeCallback("fin3_debug", function(_, _, debug)
             local enable = debug == "1"
             debugCheckbox:SetChecked(enable)
-            showDebugOptions(enable)
+            debugContainer:SetVisible(not enable)
+            panel:InvalidateLayout()
 
             if enable then
                 Fin3.requestAllFins()
             end
         end, "fin3_debug_callback")
     end
-
-    cp:InvalidateLayout()
 end

@@ -1,11 +1,5 @@
 local PANEL = {}
 
-surface.CreateFont("fin3_bigtext", {
-    font = "Roboto",
-    size = 24,
-    weight = 850
-})
-
 surface.CreateFont("fin3_labeltext", {
     font = "Roboto",
     size = 16,
@@ -33,13 +27,6 @@ function PANEL:AddLabel(text)
     panel:SetColor(Color(0, 0, 0))
     panel:SetWrap(true)
     panel:SetAutoStretchVertical(true)
-
-    return panel
-end
-
-function PANEL:AddTitle(text)
-    local panel = self:AddLabel(text)
-    panel:SetFont("fin3_bigtext")
 
     return panel
 end
@@ -119,6 +106,13 @@ function PANEL:AddHideableContainer()
 
     function panel:Paint(w, h)
         draw.RoundedBox(4, 0, 0, w, h, Color(225, 225, 225))
+    end
+
+    panel.OldSetVisible = panel.SetVisible
+
+    function panel:SetVisible(visible)
+        self:OldSetVisible(visible)
+        self:InvalidateParent()
     end
 
     return panel

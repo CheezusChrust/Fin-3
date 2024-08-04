@@ -198,7 +198,6 @@ function TOOL.BuildCPanel(cp)
     panel:Dock(TOP)
     panel:DockMargin(10, 0, 10, 0)
 
-    panel:AddTitle("#tool.fin3.desc")
     panel:AddInfoBox("#tool.fin3.info")
 
     -- Fin type selection and per-type settings
@@ -221,7 +220,6 @@ function TOOL.BuildCPanel(cp)
             finTypeHelpText:SetText("#tool.fin3.fintype." .. data .. ".info")
             camberedSettingsContainer:SetVisible(data == "cambered")
             RunConsoleCommand("fin3_fintype", data)
-            panel:InvalidateLayout()
         end
 
         cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
@@ -234,7 +232,6 @@ function TOOL.BuildCPanel(cp)
                 finTypeHelpText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
 
                 camberedSettingsContainer:SetVisible(newFinType == "cambered")
-                panel:InvalidateLayout()
             end
         end, "fin3_fintype_callback")
     end
@@ -256,7 +253,6 @@ function TOOL.BuildCPanel(cp)
 
         function advancedCheckbox:OnChange()
             advancedSettingsContainer:SetVisible(self:GetChecked())
-            panel:InvalidateLayout()
         end
     end
 
@@ -272,7 +268,6 @@ function TOOL.BuildCPanel(cp)
 
         function debugCheckbox:OnChange()
             debugContainer:SetVisible(self:GetChecked())
-            panel:InvalidateLayout()
         end
 
         cvars.RemoveChangeCallback("fin3_debug", "fin3_debug_callback")
@@ -280,7 +275,6 @@ function TOOL.BuildCPanel(cp)
             local enable = debug == "1"
             debugCheckbox:SetChecked(enable)
             debugContainer:SetVisible(not enable)
-            panel:InvalidateLayout()
 
             if enable then
                 Fin3.requestAllFins()

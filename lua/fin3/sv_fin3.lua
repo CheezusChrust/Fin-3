@@ -163,7 +163,15 @@ function Fin3.fin:calcBaseData()
         newPhys:SetDamping(0, rotDamping)
     end
 
-    self.rootPhys = getRootParent(self.ent):GetPhysicsObject()
+    local newRootPhys = getRootParent(self.ent):GetPhysicsObject()
+
+    if not IsValid(self.rootPhys) or newRootPhys ~= self.rootPhys then
+        newRootPhys:EnableDrag(false)
+        local _, rotDamping = newRootPhys:GetDamping()
+        newRootPhys:SetDamping(0, rotDamping)
+
+        self.rootPhys = newRootPhys
+    end
 
     self.velVector = self:getVelocity()
 

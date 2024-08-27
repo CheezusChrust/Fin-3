@@ -124,13 +124,25 @@ end)
 function Fin3.fin:calcSurfaceArea()
     local ent = self.ent
 
-    local obbSize = ent:OBBMaxs() - ent:OBBMins()
+    if ent:GetClass() == "primitive_airfoil" then
+        local rootChord = ent:GetPrimCHORDR() / 39.3701
+        local tipChord = ent:GetPrimCHORDT() / 39.3701
+        local sweepAngle = -ent:GetPrimSWEEP()
+        local effectiveSpan = ent:GetPrimSPAN() / 39.3701 / cos(rad(sweepAngle))
 
-    local span = abs(obbSize:Dot(roundVectorToAxis(self.rightAxis)))
-    local chord = abs(obbSize:Dot(roundVectorToAxis(self.forwardAxis)))
+        self.surfaceArea = (rootChord + tipChord) / 2 * effectiveSpan
+        self.aspectRatio = effectiveSpan^2 / self.surfaceArea
 
-    self.surfaceArea = span * chord * 0.00064516 -- in^2 to m^2
-    self.aspectRatio = span / chord
+        ent:SetNW2Float("fin3_sweepAngle", sweepAngle)
+    else
+        local obbSize = ent:OBBMaxs() - ent:OBBMins()
+
+        local span = abs(obbSize:Dot(roundVectorToAxis(self.rightAxis)))
+        local chord = abs(obbSize:Dot(roundVectorToAxis(self.forwardAxis)))
+
+        self.surfaceArea = span * chord * 0.00064516 -- in^2 to m^2
+        self.aspectRatio = span / chord
+    end
     self.invAspectRatio = 1 / self.aspectRatio
 
     ent:SetNW2Float("fin3_surfaceArea", self.surfaceArea)
@@ -300,20 +312,29 @@ function Fin3.fin:think()
 end
 
 function Fin3.fin:remove()
-    if IsValid(self.ent) then
-        self.ent:SetNW2String("fin3_finType", nil)
-        self.ent:SetNW2Vector("fin3_upAxis", nil)
-        self.ent:SetNW2Vector("fin3_forwardAxis", nil)
-        self.ent:SetNW2Vector("fin3_rightAxis", nil)
-        self.ent:SetNW2Float("fin3_efficiency", nil)
-        self.ent:SetNW2Float("fin3_surfaceArea", nil)
+    local ent = self.ent
+
+    if IsValid(ent) then
+        ent:SetNW2String("fin3_finType", nil)
+        ent:SetNW2Vector("fin3_upAxis", nil)
+        ent:SetNW2Vector("fin3_forwardAxis", nil)
+        ent:SetNW2Vector("fin3_rightAxis", nil)
+        ent:SetNW2Float("fin3_efficiency", nil)
+        ent:SetNW2Float("fin3_surfaceArea", nil)
+        ent:SetNW2Float("fin3_aspectRatio", nil)
+        ent:SetNW2Float("fin3_zeroLiftAngle", nil)
+        ent:SetNW2Float("fin3_inducedDrag", nil)
+        ent:SetNW2Bool("fin3_lowpass", nil)
+        ent:SetNW2Bool("fin3_liftVector", nil)
+        ent:SetNW2Bool("fin3_dragVector", nil)
+        ent:SetNW2Bool("fin3_sweepAngle", nil)
 
         if IsValid(self.rootPhys) then
             self.rootPhys:EnableDrag(true)
         end
     end
 
-    Fin3.fins[self.ent] = nil
+    Fin3.fins[ent] = nil
 
     local owner = self.owner
     if IsValid(owner) and Fin3.playerFinCount[owner] then

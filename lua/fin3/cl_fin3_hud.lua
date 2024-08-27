@@ -135,6 +135,7 @@ local function drawFin3Hud(localPly)
     local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
     local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
     local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
+    local sweepAngle = ent:GetNW2Float("fin3_sweepAngle", 0)
     local inducedDrag = ent:GetNW2Float("fin3_inducedDrag", 0)
     local lowpass = ent:GetNW2Bool("fin3_lowpass", false)
 
@@ -161,6 +162,10 @@ local function drawFin3Hud(localPly)
         aspectRatio,
         inducedDrag
     )
+
+    if sweepAngle ~= 0 then
+        text = text .. string.format("\nSweep Angle: %.1f°", sweepAngle)
+    end
 
     if lowpass then
         text = text .. "\nLow-pass filter enabled"

@@ -1,5 +1,15 @@
 local fins = {}
 
+local sqrt = math.sqrt
+local setFont, getTextSize = surface.SetFont, surface.GetTextSize
+local drawRoundedBoxEx, drawText, drawBeam = draw.RoundedBoxEx, draw.DrawText, render.DrawBeam
+local drawSimpleTextOutlined = draw.SimpleTextOutlined
+local setColorMaterialIgnoreZ = render.SetColorMaterialIgnoreZ
+local camStart3D, camEnd3D = cam.Start3D, cam.End3D
+local format = string.format
+local allowedClasses, localToWorldVector = Fin3.allowedClasses, Fin3.localToWorldVector
+local getPhrase = language.GetPhrase
+
 net.Receive("fin3_networkfinids", function()
     for _ = 1, net.ReadUInt(10) do
         fins[net.ReadUInt(13)] = true
@@ -17,9 +27,9 @@ local function getForceString(newtons)
     local kgf = newtons / 15.24 -- GMod's gravity is 15.24m/s²
 
     if kgf < 1000 then
-        return string.format("%dkg", kgf)
+        return format("%dkg", kgf)
     else
-        return string.format("%.2ft", kgf / 1000)
+        return format("%.2ft", kgf / 1000)
     end
 end
 
@@ -43,11 +53,17 @@ local function drawDebugInfo()
                     local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
 
                     if liftVector ~= vector_origin or dragVector ~= vector_origin then
-                        cam.Start3D()
-                            render.SetColorMaterialIgnoreZ()
-                            render.DrawBeam(finPos, finPos + liftVector / 5, 1, 0, 1, GREEN)
-                            render.DrawBeam(finPos, finPos + dragVector / 5, 1, 0, 1, RED)
-                        cam.End3D()
+                        local liftLength = liftVector:Length()
+                        local dragLength = dragVector:Length()
+
+                        local scaledLiftVector = liftVector:GetNormalized() * sqrt(liftLength)
+                        local scaledDragVector = dragVector:GetNormalized() * sqrt(dragLength)
+
+                        camStart3D()
+                            setColorMaterialIgnoreZ()
+                            drawBeam(finPos, finPos + scaledLiftVector, 1, 0, 1, GREEN)
+                            drawBeam(finPos, finPos + scaledDragVector, 1, 0, 1, RED)
+                        camEnd3D()
                     end
                 end
 
@@ -59,14 +75,14 @@ local function drawDebugInfo()
                     local liftForceStr = getForceString(liftVector:Length())
                     local dragForceStr = getForceString(dragVector:Length())
 
-                    local text = string.format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
-                    surface.SetFont("Trebuchet18")
-                    local textWidth, textHeight = surface.GetTextSize(text)
+                    local text = format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
+                    setFont("Trebuchet18")
+                    local textWidth, textHeight = getTextSize(text)
                     textWidth = textWidth + 10
                     textHeight = textHeight + 10
 
-                    draw.RoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
-                    draw.DrawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
+                    drawRoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
+                    drawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
                 end
             end
         end
@@ -82,12 +98,12 @@ local function drawFin3Hud(localPly)
         ent = selected
     end
 
-    if not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()] then return end
+    if not IsValid(ent) or not allowedClasses[ent:GetClass()] then return end
 
     local fin2Eff = ent:GetNWFloat("efficency", 0)
     if fin2Eff ~= 0 and fin2Eff ~= -99 and fin2Eff ~= -100000000 then
         local drawPos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
-        draw.SimpleTextOutlined("Warning: this entity still has Fin 2 applied!", "DermaLarge", drawPos.x, drawPos.y, RED, 1, 1, 1, color_black)
+        drawSimpleTextOutlined("Warning: this entity still has Fin 2 applied!", "DermaLarge", drawPos.x, drawPos.y, RED, 1, 1, 1, color_black)
     end
 
     local tempUpAxis = localPly:GetNW2Vector("fin3_tempUpAxis", vector_origin)
@@ -97,31 +113,31 @@ local function drawFin3Hud(localPly)
     local entSize = (ent:OBBMaxs() - ent:OBBMins()):Length() / 2
 
     if tempUpAxis ~= vector_origin then
-        local worldTempUpAxis = Fin3.localToWorldVector(ent, tempUpAxis)
+        local worldTempUpAxis = localToWorldVector(ent, tempUpAxis)
 
-        cam.Start3D()
-            render.SetColorMaterialIgnoreZ()
-            render.DrawBeam(centerPos, centerPos + worldTempUpAxis * 25, 0.5, 0, 1, GREEN)
-        cam.End3D()
+        camStart3D()
+            setColorMaterialIgnoreZ()
+            drawBeam(centerPos, centerPos + worldTempUpAxis * 25, 0.5, 0, 1, GREEN)
+        camEnd3D()
 
         local upTextPos = (centerPos + worldTempUpAxis * 25):ToScreen()
-        draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
+        drawSimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
     end
 
     if tempForwardAxis ~= vector_origin then
         if tempForwardAxis ~= vector_origin and tempForwardAxis ~= tempUpAxis then
-            local worldTempForwardAxis = Fin3.localToWorldVector(ent, tempForwardAxis)
+            local worldTempForwardAxis = localToWorldVector(ent, tempForwardAxis)
 
-            cam.Start3D()
-                render.SetColorMaterialIgnoreZ()
-                render.DrawBeam(centerPos, centerPos + worldTempForwardAxis * entSize, 0.5, 0, 1, RED)
-            cam.End3D()
+            camStart3D()
+                setColorMaterialIgnoreZ()
+                drawBeam(centerPos, centerPos + worldTempForwardAxis * entSize, 0.5, 0, 1, RED)
+            camEnd3D()
 
             local fwdTextPos = (centerPos + worldTempForwardAxis * entSize):ToScreen()
-            draw.SimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, RED, 1, 1, 1, color_black)
+            drawSimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, RED, 1, 1, 1, color_black)
         else
             local invalidTextPos = centerPos:ToScreen()
-            draw.SimpleTextOutlined("Invalid Forward Vector", "DermaLarge", invalidTextPos.x, invalidTextPos.y, RED, 1, 1, 1, color_black)
+            drawSimpleTextOutlined("Invalid Forward Vector", "DermaLarge", invalidTextPos.x, invalidTextPos.y, RED, 1, 1, 1, color_black)
         end
     end
 
@@ -129,8 +145,8 @@ local function drawFin3Hud(localPly)
 
     if finType == "" then return end
 
-    local setUpAxis = Fin3.localToWorldVector(ent, ent:GetNW2Vector("fin3_upAxis", vector_origin))
-    local setForwardAxis = Fin3.localToWorldVector(ent, ent:GetNW2Vector("fin3_forwardAxis", vector_origin))
+    local setUpAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_upAxis", vector_origin))
+    local setForwardAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_forwardAxis", vector_origin))
     local zeroLiftAngle = ent:GetNW2Float("fin3_zeroLiftAngle", 0)
     local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
     local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
@@ -139,24 +155,24 @@ local function drawFin3Hud(localPly)
     local inducedDrag = ent:GetNW2Float("fin3_inducedDrag", 0)
     local lowpass = ent:GetNW2Bool("fin3_lowpass", false)
 
-    cam.Start3D()
-        render.SetColorMaterialIgnoreZ()
-        render.DrawBeam(centerPos, centerPos + setForwardAxis * entSize, 0.5, 0, 1, RED)
-        render.DrawBeam(centerPos, centerPos + setUpAxis * 25, 0.5, 0, 1, GREEN)
-    cam.End3D()
+    camStart3D()
+        setColorMaterialIgnoreZ()
+        drawBeam(centerPos, centerPos + setForwardAxis * entSize, 0.5, 0, 1, RED)
+        drawBeam(centerPos, centerPos + setUpAxis * 25, 0.5, 0, 1, GREEN)
+    camEnd3D()
 
     local fwdTextPos = (centerPos + setForwardAxis * entSize):ToScreen()
-    draw.SimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, RED, 1, 1, 1, color_black)
+    drawSimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, RED, 1, 1, 1, color_black)
 
     local upTextPos = (centerPos + setUpAxis * 25):ToScreen()
-    draw.SimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
+    drawSimpleTextOutlined("Lift Vector", "DermaLarge", upTextPos.x, upTextPos.y, GREEN, 1, 1, 1, color_black)
 
-    surface.SetFont("Trebuchet18")
+    setFont("Trebuchet18")
     local infoPos = centerPos:ToScreen()
 
-    local text = string.format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
-        language.GetPhrase("tool.fin3.fintype." .. finType),
-        zeroLiftAngle ~= 0 and string.format("Zero Lift Angle: -%.1f°\n", zeroLiftAngle) or "",
+    local text = format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
+        getPhrase("tool.fin3.fintype." .. finType),
+        zeroLiftAngle ~= 0 and format("Zero Lift Angle: -%.1f°\n", zeroLiftAngle) or "",
         efficiency,
         surfaceArea * efficiency,
         aspectRatio,
@@ -164,17 +180,17 @@ local function drawFin3Hud(localPly)
     )
 
     if sweepAngle ~= 0 then
-        text = text .. string.format("\nSweep Angle: %.1f°", sweepAngle)
+        text = text .. format("\nSweep Angle: %.1f°", sweepAngle)
     end
 
     if lowpass then
         text = text .. "\nLow-pass filter enabled"
     end
 
-    local textWidth, textHeight = surface.GetTextSize(text)
+    local textWidth, textHeight = getTextSize(text)
 
-    draw.RoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, BACKGROUND, false, true, true, true)
-    draw.DrawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
+    drawRoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, BACKGROUND, false, true, true, true)
+    drawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
 end
 
 local function drawFin3PropellerHud(localPly)

@@ -3,7 +3,9 @@ Fin3 = Fin3 or {}
 Fin3.allowedClasses = {
     prop_physics = true,
     primitive_shape = true,
-    primitive_airfoil = true
+    primitive_airfoil = true,
+    sent_prop2mesh = true,
+    sent_prop2mesh_legacy = true
 }
 
 if SERVER then

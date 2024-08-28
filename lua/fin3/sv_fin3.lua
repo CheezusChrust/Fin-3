@@ -1,4 +1,5 @@
 local deg, rad, asin, cos, abs, sign, pi = math.deg, math.rad, math.asin, math.cos, math.abs, Fin3.sign, math.pi
+local min, remap = math.min, math.Remap
 local localToWorldVector = Fin3.localToWorldVector
 local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
@@ -125,13 +126,38 @@ function Fin3.fin:calcSurfaceArea()
     local ent = self.ent
 
     if ent:GetClass() == "primitive_airfoil" then
+        local controlSurfaceMode = ent:GetPrimCSOPT()
+
+        local sweepAngle = -ent:GetPrimSWEEP()
+
+        local effectiveSpan = ent:GetPrimSPAN() / 39.3701 / cos(rad(sweepAngle))
         local rootChord = ent:GetPrimCHORDR() / 39.3701
         local tipChord = ent:GetPrimCHORDT() / 39.3701
-        local sweepAngle = -ent:GetPrimSWEEP()
-        local effectiveSpan = ent:GetPrimSPAN() / 39.3701 / cos(rad(sweepAngle))
+        local finSurfaceArea = (rootChord + tipChord) / 2 * effectiveSpan
 
-        self.surfaceArea = (rootChord + tipChord) / 2 * effectiveSpan
-        self.aspectRatio = effectiveSpan^2 / self.surfaceArea
+        if controlSurfaceMode > 0 and controlSurfaceMode ~= 2 then
+            local xLength = ent:GetPrimCSXLEN()
+            local yLength = ent:GetPrimCSYLEN()
+            local yPos = ent:GetPrimCSYPOS()
+
+            local controlSurfaceSpan = effectiveSpan * min(1 - yPos, yLength)
+
+            -- Chord at the tip of the control surface is the chord it uses along its whole length
+            local controlSurfaceChord = remap(min(yPos + yLength, 1), 0, 1, rootChord, tipChord) * xLength
+
+            local controlSurfaceArea = controlSurfaceChord * controlSurfaceSpan
+
+            if controlSurfaceMode == 3 then -- Inverse clipping enabled, whole primitive is the control surface
+                self.aspectRatio = controlSurfaceSpan^2 / controlSurfaceArea
+                self.surfaceArea = controlSurfaceArea
+            else -- Control surface is enabled and is clipped out of the main primitive
+                self.surfaceArea = finSurfaceArea - controlSurfaceArea
+                self.aspectRatio = effectiveSpan^2 / finSurfaceArea -- Aspect ratio of the whole fin, disregarding the control surface cut
+            end
+        else
+            self.surfaceArea = finSurfaceArea
+            self.aspectRatio = effectiveSpan^2 / self.surfaceArea
+        end
 
         ent:SetNW2Float("fin3_sweepAngle", sweepAngle)
     else

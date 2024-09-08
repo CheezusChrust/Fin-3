@@ -176,7 +176,7 @@ function Fin3.fin:calcSurfaceArea()
 end
 
 function Fin3.fin:getVelocity()
-    local curPos = self.ent:GetPos()
+    local curPos = self.ent:LocalToWorld(self.massCenter)
     local vel = (curPos - self.lastPos) / dt
 
     self.lastPos = curPos

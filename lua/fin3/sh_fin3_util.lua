@@ -134,19 +134,6 @@ if SERVER then
         phys:ApplyTorqueCenter(angf)
     end
 
-    --- Gets the linear velocity at a point on a rotating object
-    ---@param phys PhysObj Physics object
-    ---@param pos Vector Position to get the velocity at, in local space
-    ---@return Vector
-    function Fin3.getRotInducedVel(phys, pos)
-        if not IsValid(phys) then return Vector() end
-
-        local p = pos - phys:GetMassCenter()
-        local v = (phys:GetAngleVelocity() * 0.0174533):Cross(p)
-        v = Fin3.localToWorldVector(phys:GetEntity(), v)
-        return v
-    end
-
     function Fin3.transmitFin(ent)
         net.Start("fin3_networkfinids")
         net.WriteUInt(1, 10)

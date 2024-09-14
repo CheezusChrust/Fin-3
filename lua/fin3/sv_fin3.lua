@@ -4,7 +4,6 @@ local localToWorldVector = Fin3.localToWorldVector
 local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
-local getRotInducedVel = Fin3.getRotInducedVel
 local calcLinearInterp = Fin3.calcLinearInterp
 local dt = engine.TickInterval()
 
@@ -181,7 +180,7 @@ function Fin3.fin:getVelocity()
 
     self.lastPos = curPos
 
-    return vel + getRotInducedVel(self.rootPhys, self.ent:WorldToLocal(curPos))
+    return vel
 end
 
 --- Calculates velocity, angle of attack, and lift vector

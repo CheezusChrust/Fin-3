@@ -1,5 +1,5 @@
 Fin3.models = {
-    -- https://aviation.stackexchange.com/questions/21391/what-is-the-performance-of-a-flat-plate-wing
+    -- https://web.archive.org/web/20240925030114/https://aviation.stackexchange.com/questions/21391/what-is-the-performance-of-a-flat-plate-wing
     flat = {
         curves = {
             lift = {
@@ -68,7 +68,7 @@ Fin3.models = {
         }
     },
 
-    -- http://airfoiltools.com/airfoil/details?airfoil=naca4412-il
+    -- https://web.archive.org/web/20240925030940/http://airfoiltools.com/airfoil/details?airfoil=naca4412-il
     cambered = {
         curves = {
             lift = {

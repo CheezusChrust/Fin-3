@@ -50,6 +50,10 @@ function PANEL:AddInfoBox(text)
 
     text:DockMargin(5, 5, 5, 5)
 
+    function panel:SetText(str)
+        text:SetText(str)
+    end
+
     return panel
 end
 

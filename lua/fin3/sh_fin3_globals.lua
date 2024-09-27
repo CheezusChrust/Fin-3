@@ -14,11 +14,16 @@ if SERVER then
                                 -- Used for calculating induced drag coefficient
 
     Fin3.fins = {}
+    Fin3.propellers = {}
 
     Fin3.playerFinCount = Fin3.playerFinCount or {}
     CreateConVar("sbox_max_fin3", "20", FCVAR_ARCHIVE, "Maximum number of entities with Fin3 each player can have", 0)
 
+    Fin3.playerPropellerCount = Fin3.playerPropellerCount or {}
+    CreateConVar("sbox_max_fin3_propellers", "20", FCVAR_ARCHIVE, "Maximum number of entities with Fin3 propellers each player can have", 0)
+
     util.AddNetworkString("fin3_networkfinids")
+    util.AddNetworkString("fin3_networkpropellerids")
 else
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)

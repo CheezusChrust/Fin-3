@@ -193,6 +193,28 @@ local function drawFin3Hud(localPly)
     drawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
 end
 
+--[[
+    local ent = this
+    local rad2deg = 180 / math.pi
+    
+    hook.Add("PostDrawOpaqueRenderables", "test", function()
+        if not IsValid(ent) then
+            hook.Remove("PostDrawOpaqueRenderables", "test")
+            
+            return
+        end
+        
+        local forward = ent:GetForward()
+        local pitch = -math.asin(forward:Dot(Vector(0, 0, 1))) * rad2deg
+        local forwardFlat = Vector(forward.x, forward.y):GetNormalized()
+        local yaw = math.atan2(forwardFlat.y, forwardFlat.x) * rad2deg
+    
+        cam.Start3D2D(ent:GetPos(), Angle(0, yaw + 90, pitch + 90), 1)
+            surface.DrawCircle(0, 0, 25, Color(255, 0, 0))
+        cam.End3D2D()
+    end)
+--]]
+
 local function drawFin3PropellerHud(localPly)
 
 end

@@ -72,6 +72,10 @@ function Fin3.propeller:new(ply, ent, data)
     return propeller
 end
 
+duplicator.RegisterEntityModifier("fin3_propeller", function(...)
+    Fin3.propeller:new(...)
+end)
+
 --function Fin3.propeller:calcPropellerData()
     --self.pitch = pi * 0.75 * self.diameter * tan(self.bladeAngle * deg2rad)
 --end

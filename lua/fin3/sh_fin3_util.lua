@@ -151,9 +151,31 @@ if SERVER then
 
         net.Send(ply)
     end
+
+    function Fin3.transmitPropeller(ent)
+        net.Start("fin3_networkpropellerids")
+        net.WriteUInt(1, 10)
+        net.WriteUInt(ent:EntIndex(), 13)
+        net.Broadcast()
+    end
+
+    function Fin3.transmitAllPropellers(ply)
+        net.Start("fin3_networkpropellerids")
+        net.WriteUInt(table.Count(Fin3.propellers), 10)
+
+        for _, propeller in pairs(Fin3.propellers) do
+            net.WriteUInt(propeller.ent:EntIndex(), 13)
+        end
+
+        net.Send(ply)
+    end
 else
     function Fin3.requestAllFins()
         net.Start("fin3_networkfinids")
+        net.SendToServer()
+    end
+    function Fin3.requestAllPropellers()
+        net.Start("fin3_networkpropellerids")
         net.SendToServer()
     end
 end

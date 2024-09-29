@@ -264,7 +264,7 @@ function TOOL.BuildCPanel(cp)
         local debugContainer = panel:AddHideableContainer()
         debugContainer:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_debug_showvectors"):DockMargin(5, 5, 5, 5)
         debugContainer:AddCheckbox("#tool.fin3.debug.showforces", "fin3_debug_showforces"):DockMargin(5, 5, 5, 5)
-        debugContainer:SetVisible(notdebugEnabled)
+        debugContainer:SetVisible(not debugEnabled)
 
         function debugCheckbox:OnChange()
             debugContainer:SetVisible(self:GetChecked())

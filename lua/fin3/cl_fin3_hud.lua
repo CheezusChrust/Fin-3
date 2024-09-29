@@ -1,6 +1,8 @@
 local fins = {}
+local propellers = {}
 
-local sqrt = math.sqrt
+local sqrt, abs, max = math.sqrt, math.abs, math.max
+local sin, cos, deg2rad = math.sin, math.cos, math.pi / 180
 local setFont, getTextSize = surface.SetFont, surface.GetTextSize
 local drawRoundedBoxEx, drawText, drawBeam = draw.RoundedBoxEx, draw.DrawText, render.DrawBeam
 local drawSimpleTextOutlined = draw.SimpleTextOutlined
@@ -10,18 +12,27 @@ local format = string.format
 local allowedClasses, localToWorldVector = Fin3.allowedClasses, Fin3.localToWorldVector
 local getPhrase = language.GetPhrase
 
+local cvarDebugEnabled = GetConVar("fin3_debug")
+local cvarShowVectors = GetConVar("fin3_debug_showvectors")
+local cvarShowForces = GetConVar("fin3_debug_showforces")
+local cvarPropellerDebugEnabled = GetConVar("fin3_propeller_debug")
+local cvarPropellerShowVectors = GetConVar("fin3_propeller_debug_showvectors")
+local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
+
+local RED, GREEN = Color(255, 0, 0), Color(0, 255, 0)
+local BACKGROUND = Color(0, 0, 0, 230)
+
 net.Receive("fin3_networkfinids", function()
     for _ = 1, net.ReadUInt(10) do
         fins[net.ReadUInt(13)] = true
     end
 end)
 
-local cvarDebugEnabled = GetConVar("fin3_debug")
-local cvarShowVectors = GetConVar("fin3_debug_showvectors")
-local cvarShowForces = GetConVar("fin3_debug_showforces")
-
-local RED, GREEN = Color(255, 0, 0), Color(0, 255, 0)
-local BACKGROUND = Color(0, 0, 0, 230)
+net.Receive("fin3_networkpropellerids", function()
+    for _ = 1, net.ReadUInt(10) do
+        propellers[net.ReadUInt(13)] = true
+    end
+end)
 
 local function getForceString(newtons)
     local kgf = newtons / 15.24 -- GMod's gravity is 15.24m/s²
@@ -31,6 +42,22 @@ local function getForceString(newtons)
     else
         return format("%.2ft", kgf / 1000)
     end
+end
+
+local function pushGetAvg(value, tbl, samples)
+    tbl[#tbl + 1] = value
+
+    if #tbl > samples then
+        table.remove(tbl, 1)
+    end
+
+    local sum = 0
+
+    for i = 1, #tbl do
+        sum = sum + tbl[i]
+    end
+
+    return sum / #tbl
 end
 
 local function drawDebugInfo()
@@ -193,34 +220,151 @@ local function drawFin3Hud(localPly)
     drawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
 end
 
---[[
-    local ent = this
-    local rad2deg = 180 / math.pi
-    
-    hook.Add("PostDrawOpaqueRenderables", "test", function()
-        if not IsValid(ent) then
-            hook.Remove("PostDrawOpaqueRenderables", "test")
-            
-            return
+local thrustAvgs = {}
+local rpmAvgs = {}
+local torqueAvgs = {}
+
+local function drawPropellerDebugInfo()
+    if not cvarPropellerDebugEnabled:GetBool() then return end
+
+    local showVectors = cvarPropellerShowVectors:GetBool()
+    local showForces = cvarPropellerShowForces:GetBool()
+
+    if showVectors or showForces then
+        for index in pairs(propellers) do
+            local propeller = Entity(index)
+
+            if not IsValid(propeller) or propeller:GetNW2Int("fin3_propeller_bladecount") == 0 then
+                propellers[index] = nil
+                thrustAvgs[index] = nil
+                rpmAvgs[index] = nil
+                torqueAvgs[index] = nil
+            else
+                local propellerPos = propeller:LocalToWorld(propeller:OBBCenter())
+
+                if showForces and propeller:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                    local screenPos = propellerPos:ToScreen()
+
+                    rpmAvgs[index] = rpmAvgs[index] or {}
+                    thrustAvgs[index] = thrustAvgs[index] or {}
+                    torqueAvgs[index] = torqueAvgs[index] or {}
+
+                    local thrust = getForceString(pushGetAvg(propeller:GetNW2Float("fin3_propeller_thrust"), thrustAvgs[index], 30))
+                    local torque = pushGetAvg(abs(propeller:GetNW2Float("fin3_propeller_torque")), torqueAvgs[index], 30)
+                    local aoa = propeller:GetNW2Float("fin3_propeller_aoa")
+                    local rpm = pushGetAvg(propeller:GetNW2Float("fin3_propeller_rpm"), rpmAvgs[index], 30)
+
+                    if propeller:GetNW2Bool("fin3_propeller_invertRotation") then
+                        rpm = -rpm
+                    end
+
+                    local text = format("Thrust: %s\nDrag Torque: %dNm\nAoA: %.1f\nRPM: %d", thrust, torque, aoa, rpm)
+                    setFont("Trebuchet18")
+                    local textWidth, textHeight = getTextSize(text)
+                    textWidth = textWidth + 10
+                    textHeight = textHeight + 10
+
+                    drawRoundedBoxEx(8, screenPos.x - textWidth, screenPos.y - textHeight, textWidth, textHeight, BACKGROUND, true, true, true, false)
+                    drawText(text, "Trebuchet18", screenPos.x - 5, screenPos.y - textHeight + 5, color_white, TEXT_ALIGN_RIGHT)
+                end
+            end
         end
-        
-        local forward = ent:GetForward()
-        local pitch = -math.asin(forward:Dot(Vector(0, 0, 1))) * rad2deg
-        local forwardFlat = Vector(forward.x, forward.y):GetNormalized()
-        local yaw = math.atan2(forwardFlat.y, forwardFlat.x) * rad2deg
-    
-        cam.Start3D2D(ent:GetPos(), Angle(0, yaw + 90, pitch + 90), 1)
-            surface.DrawCircle(0, 0, 25, Color(255, 0, 0))
-        cam.End3D2D()
-    end)
---]]
+    end
+end
+
+local vec_x = Vector(1, 0, 0)
+local vec_y = Vector(0, 1, 0)
 
 local function drawFin3PropellerHud(localPly)
+    local trace = localPly:GetEyeTrace()
+    local ent = trace.Entity
 
+    if not IsValid(ent) or not allowedClasses[ent:GetClass()] then return end
+
+    local centerPos = ent:LocalToWorld(ent:OBBCenter())
+    local forward = ent:GetNW2Vector("fin3_propeller_forwardAxis", vector_origin)
+    local worldForward = localToWorldVector(ent, forward)
+    local diameter = ent:GetNW2Float("fin3_propeller_diameter", 0)
+    local bladeCount = ent:GetNW2Int("fin3_propeller_bladeCount", 0)
+    local invertRotation = ent:GetNW2Bool("fin3_propeller_invertRotation", false)
+
+    local hasPropeller = forward ~= vector_origin
+
+    if not hasPropeller then
+        forward = Fin3.roundVectorToAxis(Fin3.worldToLocalVector(ent, trace.HitNormal))
+        diameter = localPly:GetInfoNum("fin3_propeller_diameter", 2)
+        bladeCount = localPly:GetInfoNum("fin3_propeller_bladecount", 2)
+        invertRotation = localPly:GetInfoNum("fin3_propeller_invert", 0) == 1
+    end
+
+    local worldForward = localToWorldVector(ent, forward)
+
+    local radiusUnits = diameter * 39.3701 / 2
+
+    local v
+    if abs(vec_x:Dot(forward)) == 1 then
+        v = vec_y
+    elseif abs(vec_y:Dot(forward)) == 1 then
+        v = vec_x
+    else
+        v = vec_x
+    end
+
+    local v2 = forward:Cross(v):GetNormalized()
+
+    setColorMaterialIgnoreZ()
+
+    cam.Start3D()
+        local div = 360 / bladeCount
+        for i = 0, bladeCount - 1 do
+            local angle = (-CurTime() * 32 + i * div) * deg2rad
+            if invertRotation then angle = -angle end
+
+            drawBeam(centerPos, centerPos + localToWorldVector(ent, v * sin(angle) + v2 * cos(angle)) * radiusUnits, 1, 0, 1, color_white)
+        end
+
+        for i = 1, 32 do
+            local angle = i / 32 * 2 * math.pi
+            local angle2 = (i - 1) / 32 * 2 * math.pi
+
+            local x = math.cos(angle)
+            local y = math.sin(angle)
+            local x2 = math.cos(angle2)
+            local y2 = math.sin(angle2)
+
+            render.DrawLine(centerPos + localToWorldVector(ent, v * x + v2 * y) * radiusUnits, centerPos + localToWorldVector(ent, v * x2 + v2 * y2) * radiusUnits, color_white)
+        end
+
+        local forwardSize = max(abs((ent:OBBMaxs() - ent:OBBMins()):Dot(forward)) / 2, 16)
+        local forwardPos = centerPos + worldForward * forwardSize
+
+        drawBeam(centerPos, forwardPos, 0.5, 0, 1, GREEN)
+    cam.End3D()
+
+    local fwdTextPos = (centerPos + worldForward * forwardSize):ToScreen()
+    drawSimpleTextOutlined("Forward", "DermaLarge", fwdTextPos.x, fwdTextPos.y, GREEN, 1, 1, 1, color_black)
+
+    if not hasPropeller then return end
+
+    local bladeCount = ent:GetNW2Int("fin3_propeller_bladecount", 0)
+    local bladeAngle = ent:GetNW2Float("fin3_propeller_bladeangle", 0)
+
+    setFont("Trebuchet18")
+    local text = format("Blade Count: %d\nDiameter: %.2fm\nBlade Angle: %.1f°", bladeCount, diameter, bladeAngle)
+
+    local textWidth, textHeight = getTextSize(text)
+    textWidth = textWidth
+    textHeight = textHeight
+
+    local infoPos = centerPos:ToScreen()
+
+    drawRoundedBoxEx(8, infoPos.x, infoPos.y, textWidth + 10, textHeight + 10, BACKGROUND, false, true, true, true)
+    drawText(text, "Trebuchet18", infoPos.x + 5, infoPos.y + 5, color_white, TEXT_ALIGN_LEFT)
 end
 
 hook.Add("HUDPaint", "fin3_hud", function()
     drawDebugInfo()
+    drawPropellerDebugInfo()
 
     local localPly = LocalPlayer()
     local wep = localPly:GetActiveWeapon()

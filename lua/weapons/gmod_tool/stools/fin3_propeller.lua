@@ -116,4 +116,30 @@ function TOOL.BuildCPanel(cp)
 
     panel:AddCheckbox("Invert Spin Direction", "fin3_propeller_invert"):DockMargin(0, 0, 0, 7)
     panel:AddHelpText("Spin the propeller clockwise (when viewed from behind) if this is disabled, counter-clockwise if enabled."):DockMargin(10, 0, 10, 5)
+
+    -- Debug settings
+    do
+        local debugEnabled = GetConVar("fin3_propeller_debug"):GetBool()
+        local debugCheckbox = panel:AddCheckbox("#tool.fin3.debug", "fin3_propeller_debug")
+        debugCheckbox:SetValue(debugEnabled)
+        local debugContainer = panel:AddHideableContainer()
+        debugContainer:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_propeller_debug_showvectors"):DockMargin(5, 5, 5, 5)
+        debugContainer:AddCheckbox("#tool.fin3.debug.showforces", "fin3_propeller_debug_showforces"):DockMargin(5, 5, 5, 5)
+        debugContainer:SetVisible(not debugEnabled)
+
+        function debugCheckbox:OnChange()
+            debugContainer:SetVisible(self:GetChecked())
+        end
+
+        cvars.RemoveChangeCallback("fin3_propeller_debug", "fin3_debug_callback")
+        cvars.AddChangeCallback("fin3_propeller_debug", function(_, _, debug)
+            local enable = debug == "1"
+            debugCheckbox:SetChecked(enable)
+            debugContainer:SetVisible(not enable)
+
+            if enable then
+                Fin3.requestAllPropellers()
+            end
+        end, "fin3_debug_callback")
+    end
 end

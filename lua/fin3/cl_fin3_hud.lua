@@ -15,8 +15,6 @@ local getPhrase = language.GetPhrase
 local cvarDebugEnabled = GetConVar("fin3_debug")
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
-local cvarPropellerDebugEnabled = GetConVar("fin3_propeller_debug")
-local cvarPropellerShowVectors = GetConVar("fin3_propeller_debug_showvectors")
 local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
 
 local RED, GREEN = Color(255, 0, 0), Color(0, 255, 0)
@@ -225,12 +223,9 @@ local rpmAvgs = {}
 local torqueAvgs = {}
 
 local function drawPropellerDebugInfo()
-    if not cvarPropellerDebugEnabled:GetBool() then return end
-
-    local showVectors = cvarPropellerShowVectors:GetBool()
     local showForces = cvarPropellerShowForces:GetBool()
 
-    if showVectors or showForces then
+    if showForces then
         for index in pairs(propellers) do
             local propeller = Entity(index)
 
@@ -242,7 +237,7 @@ local function drawPropellerDebugInfo()
             else
                 local propellerPos = propeller:LocalToWorld(propeller:OBBCenter())
 
-                if showForces and propeller:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                if propeller:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
                     local screenPos = propellerPos:ToScreen()
 
                     rpmAvgs[index] = rpmAvgs[index] or {}

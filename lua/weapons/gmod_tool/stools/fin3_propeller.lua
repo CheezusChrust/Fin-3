@@ -44,10 +44,25 @@ function TOOL:LeftClick(trace)
     return true
 end
 
-function TOOL:Think()
-end
-
 function TOOL:RightClick(trace)
+    local ent = trace.Entity
+    local class = ent:GetClass()
+
+    if CLIENT then
+        return Fin3.allowedClasses[class]
+    end
+
+    local propeller = Fin3.propellers[ent]
+
+    if propeller then
+        local owner = self:GetOwner()
+        owner:ConCommand("fin3_propeller_bladecount " .. propeller.bladeCount)
+        owner:ConCommand("fin3_propeller_diameter " .. propeller.diameter)
+        owner:ConCommand("fin3_propeller_bladeangle " .. propeller.bladeAngle)
+        owner:ConCommand("fin3_propeller_invert " .. (propeller.invertRotation and 1 or 0))
+    end
+
+    return Fin3.allowedClasses[class]
 end
 
 function TOOL:Reload(trace)
@@ -119,23 +134,11 @@ function TOOL.BuildCPanel(cp)
 
     -- Debug settings
     do
-        local debugEnabled = GetConVar("fin3_propeller_debug"):GetBool()
-        local debugCheckbox = panel:AddCheckbox("#tool.fin3.debug", "fin3_propeller_debug")
-        debugCheckbox:SetValue(debugEnabled)
-        local debugContainer = panel:AddHideableContainer()
-        debugContainer:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_propeller_debug_showvectors"):DockMargin(5, 5, 5, 5)
-        debugContainer:AddCheckbox("#tool.fin3.debug.showforces", "fin3_propeller_debug_showforces"):DockMargin(5, 5, 5, 5)
-        debugContainer:SetVisible(not debugEnabled)
+        panel:AddCheckbox("Display propeller debug info", "fin3_propeller_debug_showforces")
 
-        function debugCheckbox:OnChange()
-            debugContainer:SetVisible(self:GetChecked())
-        end
-
-        cvars.RemoveChangeCallback("fin3_propeller_debug", "fin3_debug_callback")
-        cvars.AddChangeCallback("fin3_propeller_debug", function(_, _, debug)
+        cvars.RemoveChangeCallback("fin3_propeller_debug_showforces", "fin3_debug_callback")
+        cvars.AddChangeCallback("fin3_propeller_debug_showforces", function(_, _, debug)
             local enable = debug == "1"
-            debugCheckbox:SetChecked(enable)
-            debugContainer:SetVisible(not enable)
 
             if enable then
                 Fin3.requestAllPropellers()

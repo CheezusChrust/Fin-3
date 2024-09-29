@@ -248,12 +248,13 @@ local function drawPropellerDebugInfo()
                     local torque = pushGetAvg(abs(propeller:GetNW2Float("fin3_propeller_torque")), torqueAvgs[index], 30)
                     local aoa = propeller:GetNW2Float("fin3_propeller_aoa")
                     local rpm = pushGetAvg(propeller:GetNW2Float("fin3_propeller_rpm"), rpmAvgs[index], 30)
+                    local bladeAngle = propeller:GetNW2Float("fin3_propeller_bladeAngle")
 
                     if propeller:GetNW2Bool("fin3_propeller_invertRotation") then
                         rpm = -rpm
                     end
 
-                    local text = format("Thrust: %s\nDrag Torque: %dNm\nAoA: %.1f\nRPM: %d", thrust, torque, aoa, rpm)
+                    local text = format("Thrust: %s\nDrag Torque: %dNm\nBlade Angle: %.1f°\nAoA: %.1f°\nRPM: %d", thrust, torque, bladeAngle, aoa, rpm)
                     setFont("Trebuchet18")
                     local textWidth, textHeight = getTextSize(text)
                     textWidth = textWidth + 10

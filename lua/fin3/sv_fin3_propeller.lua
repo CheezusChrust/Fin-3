@@ -65,7 +65,7 @@ function Fin3.propeller:new(ply, ent, data)
     ent:SetNW2Vector("fin3_propeller_forwardAxis", propeller.forwardAxis)
     ent:SetNW2Int("fin3_propeller_bladeCount", propeller.bladeCount)
     ent:SetNW2Float("fin3_propeller_diameter", propeller.diameter)
-    ent:SetNW2Float("fin3_propeller_bladeAngle", propeller.bladeAngle)
+    ent:SetNW2Float("fin3_propeller_bladeAngle", propeller.invertRotation and -propeller.bladeAngle or propeller.bladeAngle)
     ent:SetNW2Bool("fin3_propeller_invertRotation", propeller.invertRotation)
 
     Fin3.propellers[ent] = propeller

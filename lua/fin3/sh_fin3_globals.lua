@@ -39,7 +39,5 @@ else
     CreateClientConVar("fin3_propeller_diameter", "2", false, true, "The diameter of the propeller, in meters", 0.1, 6)
     CreateClientConVar("fin3_propeller_bladeangle", "15", false, true, "The angle of the blades on the propeller, in degrees", 0, 90)
     CreateClientConVar("fin3_propeller_invert", "0", false, true, "If enabled, propeller will produce thrust when rotating counter clockwise when viewed from the back", 0, 1)
-    CreateClientConVar("fin3_propeller_debug", "0", false, true, "Whether or not to draw debug information on all propellers owned by you", 0, 1)
-    CreateClientConVar("fin3_propeller_debug_showvectors", "1", true, true, "Whether or not to draw the lift and drag vectors", 0, 1)
-    CreateClientConVar("fin3_propeller_debug_showforces", "1", true, true, "Whether or not to display forces applied for lift and drag", 0, 1)
+    CreateClientConVar("fin3_propeller_debug_showforces", "0", true, true, "Whether or not to display forces applied for lift and drag", 0, 1)
 end

@@ -100,7 +100,7 @@ function TOOL.BuildCPanel(cp)
     diameterSlider:DockMargin(0, 0, 0, 0)
     panel:AddHelpText("#tool.fin3_propeller.diameter.info")
 
-    local angleSlider = panel:AddSlider("#tool.fin3_propeller.bladepitch", 0, 60, 0, "fin3_propeller_bladepitch")
+    local angleSlider = panel:AddSlider("#tool.fin3_propeller.bladepitch", 0, 40, 0, "fin3_propeller_bladepitch")
     angleSlider:DockMargin(0, 0, 0, 0)
     panel:AddHelpText("#tool.fin3_propeller.bladepitch.info"):DockMargin(10, 0, 10, 0)
 

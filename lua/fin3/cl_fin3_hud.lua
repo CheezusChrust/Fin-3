@@ -229,7 +229,7 @@ local function drawPropellerDebugInfo()
         for index in pairs(propellers) do
             local propeller = Entity(index)
 
-            if not IsValid(propeller) or propeller:GetNW2Int("fin3_propeller_bladecount") == 0 then
+            if not IsValid(propeller) or propeller:GetNW2Int("fin3_propeller_bladeCount") == 0 then
                 propellers[index] = nil
                 thrustAvgs[index] = nil
                 rpmAvgs[index] = nil
@@ -248,13 +248,13 @@ local function drawPropellerDebugInfo()
                     local torque = pushGetAvg(abs(propeller:GetNW2Float("fin3_propeller_torque")), torqueAvgs[index], 30)
                     local aoa = propeller:GetNW2Float("fin3_propeller_aoa")
                     local rpm = pushGetAvg(propeller:GetNW2Float("fin3_propeller_rpm"), rpmAvgs[index], 30)
-                    local bladeAngle = propeller:GetNW2Float("fin3_propeller_bladeAngle")
+                    local bladePitch = propeller:GetNW2Float("fin3_propeller_bladePitch")
 
                     if propeller:GetNW2Bool("fin3_propeller_invertRotation") then
                         rpm = -rpm
                     end
 
-                    local text = format("Thrust: %s\nDrag Torque: %dNm\nBlade Angle: %.1f°\nAoA: %.1f°\nRPM: %d", thrust, torque, bladeAngle, aoa, rpm)
+                    local text = format("Thrust: %s\nDrag Torque: %dNm\nBlade Pitch: %.1f°\nAoA: %.1f°\nRPM: %d", thrust, torque, bladePitch, aoa, rpm)
                     setFont("Trebuchet18")
                     local textWidth, textHeight = getTextSize(text)
                     textWidth = textWidth + 10
@@ -342,11 +342,11 @@ local function drawFin3PropellerHud(localPly)
 
     if not hasPropeller then return end
 
-    local bladeCount = ent:GetNW2Int("fin3_propeller_bladecount", 0)
-    local bladeAngle = ent:GetNW2Float("fin3_propeller_bladeangle", 0)
+    local bladeCount = ent:GetNW2Int("fin3_propeller_bladeCount", 0)
+    local bladePitch = ent:GetNW2Float("fin3_propeller_bladePitch", 0)
 
     setFont("Trebuchet18")
-    local text = format("Blade Count: %d\nDiameter: %.2fm\nBlade Angle: %.1f°", bladeCount, diameter, bladeAngle)
+    local text = format("Blade Count: %d\nDiameter: %.2fm\nBlade Pitch: %.1f°", bladeCount, diameter, bladePitch)
 
     local textWidth, textHeight = getTextSize(text)
     textWidth = textWidth

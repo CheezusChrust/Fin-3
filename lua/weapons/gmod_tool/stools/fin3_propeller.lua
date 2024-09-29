@@ -36,7 +36,7 @@ function TOOL:LeftClick(trace)
             forwardAxis = forwardAxis,
             bladeCount = owner:GetInfoNum("fin3_propeller_bladecount", 2),
             diameter = owner:GetInfoNum("fin3_propeller_diameter", 2),
-            bladeAngle = owner:GetInfoNum("fin3_propeller_bladeangle", 15),
+            bladePitch = owner:GetInfoNum("fin3_propeller_bladepitch", 15),
             invertRotation = owner:GetInfoNum("fin3_propeller_invert", 0) == 1
         })
     end
@@ -58,7 +58,7 @@ function TOOL:RightClick(trace)
         local owner = self:GetOwner()
         owner:ConCommand("fin3_propeller_bladecount " .. propeller.bladeCount)
         owner:ConCommand("fin3_propeller_diameter " .. propeller.diameter)
-        owner:ConCommand("fin3_propeller_bladeangle " .. propeller.bladeAngle)
+        owner:ConCommand("fin3_propeller_bladepitch " .. propeller.bladePitch)
         owner:ConCommand("fin3_propeller_invert " .. (propeller.invertRotation and 1 or 0))
     end
 
@@ -74,12 +74,12 @@ function TOOL:Reload(trace)
         return true
     end
 
-    return ent:GetNW2Int("fin3_propeller_bladecount", 0) ~= 0
+    return ent:GetNW2Int("fin3_propeller_bladeCount", 0) ~= 0
 end
 
 if SERVER then return end
 
-local propInfoString = "Pitch: %.1f inches\n" ..
+local propInfoString = "Propeller Pitch: %.1f inches\n" ..
     "Max Speed @ 500RPM: %dkm/h\n" ..
     "Max Speed @ 1500RPM: %dkm/h\n" ..
     "Max Speed @ 2500RPM: %dkm/h"
@@ -93,22 +93,16 @@ function TOOL.BuildCPanel(cp)
     panel:Dock(TOP)
     panel:DockMargin(10, 0, 10, 0)
 
-    panel:AddSlider("Blade Count", 2, 6, 0, "fin3_propeller_bladecount"):DockMargin(0, 0, 0, 0)
-    panel:AddHelpText("The number of blades on the propeller.")
+    panel:AddSlider("#tool.fin3_propeller.bladecount", 2, 6, 0, "fin3_propeller_bladecount"):DockMargin(0, 0, 0, 0)
+    panel:AddHelpText("#tool.fin3_propeller.bladecount.info")
 
-    local diameterSlider = panel:AddSlider("Diameter", 0.1, 6, 2, "fin3_propeller_diameter")
+    local diameterSlider = panel:AddSlider("#tool.fin3_propeller.diameter", 0.1, 6, 2, "fin3_propeller_diameter")
     diameterSlider:DockMargin(0, 0, 0, 0)
-    panel:AddHelpText("The diameter of the propeller, in meters.")
+    panel:AddHelpText("#tool.fin3_propeller.diameter.info")
 
-    local angleSlider = panel:AddSlider("Blade Angle", 0, 60, 0, "fin3_propeller_bladeangle")
+    local angleSlider = panel:AddSlider("#tool.fin3_propeller.bladepitch", 0, 60, 0, "fin3_propeller_bladepitch")
     angleSlider:DockMargin(0, 0, 0, 0)
-    panel:AddHelpText(
-        "The angle of the blades on the propeller, in degrees.\n" ..
-        "90 degrees is feathered (aligned forwards airflow, minimal forwards drag).\n" ..
-        "Propellers at 0 or 90 degrees cannot produce thrust.\n" ..
-        "Low angles will have a lot of low speed thrust, but a low top speed.\n" ..
-        "High angles will have a high top speed, but low overall thrust."
-    ):DockMargin(10, 0, 10, 0)
+    panel:AddHelpText("#tool.fin3_propeller.bladepitch.info"):DockMargin(10, 0, 10, 0)
 
     local propellerInfo = panel:AddInfoBox(string.format(propInfoString, 0, 0, 0, 0))
     propellerInfo:DockMargin(0, 10, 0, 10)
@@ -129,12 +123,12 @@ function TOOL.BuildCPanel(cp)
         updatePropellerInfo(propellerInfo, pitch * 39.3701, speed500, speed1500, speed2500)
     end
 
-    panel:AddCheckbox("Invert Spin Direction", "fin3_propeller_invert"):DockMargin(0, 0, 0, 7)
-    panel:AddHelpText("Spin the propeller clockwise (when viewed from behind) if this is disabled, counter-clockwise if enabled."):DockMargin(10, 0, 10, 5)
+    panel:AddCheckbox("#tool.fin3_propeller.invert", "fin3_propeller_invert"):DockMargin(0, 0, 0, 7)
+    panel:AddHelpText("#tool.fin3_propeller.invert.info"):DockMargin(10, 0, 10, 5)
 
     -- Debug settings
     do
-        panel:AddCheckbox("Display propeller debug info", "fin3_propeller_debug_showforces")
+        panel:AddCheckbox("#tool.fin3_propeller.debuginfo", "fin3_propeller_debug_showforces")
 
         cvars.RemoveChangeCallback("fin3_propeller_debug_showforces", "fin3_debug_callback")
         cvars.AddChangeCallback("fin3_propeller_debug_showforces", function(_, _, debug)

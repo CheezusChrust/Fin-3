@@ -14,7 +14,7 @@ Propeller creation data table structure:
     forwardAxis: vector
     bladeCount: number [2 - 6]
     diameter: number [0.1 - 6]
-    bladeAngle: number [0 - 90]
+    bladePitch: number [0 - 90]
     invertRotation: boolean
 --]]
 
@@ -50,11 +50,11 @@ function Fin3.propeller:new(ply, ent, data)
     propeller.diameter = data.diameter
     propeller.radius = data.diameter / 2
     propeller.bladeArea = propeller.radius * (propeller.radius / 7) -- Aspect ratio of 7, make adjustable in the future?
-    propeller.bladeAngle = data.bladeAngle
+    propeller.bladePitch = data.bladePitch
     propeller.invertRotation = data.invertRotation
 
     if data.invertRotation then
-        propeller.bladeAngle = -propeller.bladeAngle
+        propeller.bladePitch = -propeller.bladePitch
     end
 
     --propeller:calcPropellerData()
@@ -65,7 +65,7 @@ function Fin3.propeller:new(ply, ent, data)
     ent:SetNW2Vector("fin3_propeller_forwardAxis", propeller.forwardAxis)
     ent:SetNW2Int("fin3_propeller_bladeCount", propeller.bladeCount)
     ent:SetNW2Float("fin3_propeller_diameter", propeller.diameter)
-    ent:SetNW2Float("fin3_propeller_bladeAngle", propeller.invertRotation and -propeller.bladeAngle or propeller.bladeAngle)
+    ent:SetNW2Float("fin3_propeller_bladePitch", propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch)
     ent:SetNW2Bool("fin3_propeller_invertRotation", propeller.invertRotation)
 
     Fin3.propellers[ent] = propeller
@@ -82,12 +82,12 @@ duplicator.RegisterEntityModifier("fin3_propeller", function(...)
 end)
 
 --function Fin3.propeller:calcPropellerData()
-    --self.pitch = pi * 0.75 * self.diameter * tan(self.bladeAngle * deg2rad)
+    --self.pitch = pi * 0.75 * self.diameter * tan(self.bladePitch * deg2rad)
 --end
 
 function Fin3.propeller:calcAoA(forwardVel, radialVel)
     local airflowAngle = (atan2(forwardVel, radialVel) * rad2deg + 90) % 360 - 180 -- Airflow angle relative to propeller forwards
-    local alpha = (airflowAngle + self.bladeAngle - 270) % 360 - 180 -- Angle of attack of blades
+    local alpha = (airflowAngle + self.bladePitch - 270) % 360 - 180 -- Angle of attack of blades
 
     if self.invertRotation then
         alpha = -(alpha % 360 - 180)
@@ -126,12 +126,12 @@ function Fin3.propeller:calcForces(airspeed, alpha, liftCoef, dragCoef)
 end
 
 function Fin3.propeller:calcForceComponents(liftForceNewtons, dragForceNewtons, airflowAngle, alpha)
-    local bladeAngle = self.bladeAngle
-    local forwardLiftComponent = abs(cos(bladeAngle * deg2rad)) * liftForceNewtons
-    local radialLiftComponent = abs(sin(bladeAngle * deg2rad)) * liftForceNewtons * sign(bladeAngle)
+    local bladePitch = self.bladePitch
+    local forwardLiftComponent = abs(cos(bladePitch * deg2rad)) * liftForceNewtons
+    local radialLiftComponent = abs(sin(bladePitch * deg2rad)) * liftForceNewtons * sign(bladePitch)
 
     local forwardDragComponent = -cos(airflowAngle * deg2rad) * dragForceNewtons
-    local radialDragComponent = sin(alpha / rad2deg) * dragForceNewtons * sign(bladeAngle)
+    local radialDragComponent = sin(alpha / rad2deg) * dragForceNewtons * sign(bladePitch)
 
     local finalForwardForceN = forwardLiftComponent + forwardDragComponent
     local finalTorqueNm = (radialLiftComponent + radialDragComponent) * self.radius * 0.75
@@ -180,7 +180,7 @@ function Fin3.propeller:remove()
         ent:SetNW2Vector("fin3_propeller_forwardAxis", nil)
         ent:SetNW2Int("fin3_propeller_bladeCount", nil)
         ent:SetNW2Float("fin3_propeller_diameter", nil)
-        ent:SetNW2Float("fin3_propeller_bladeAngle", nil)
+        ent:SetNW2Float("fin3_propeller_bladePitch", nil)
         ent:SetNW2Bool("fin3_propeller_invertRotation", nil)
         ent:SetNW2Float("fin3_propeller_thrust", nil)
         ent:SetNW2Float("fin3_propeller_torque", nil)

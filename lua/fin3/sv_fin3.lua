@@ -82,7 +82,7 @@ function Fin3.fin:new(ply, ent, data)
     fin.lastDragForceNewtons = 0
     fin.dragForceNewtons = 0
 
-    fin.lastPos = ent:GetPos()
+    fin.lastPos = ent:LocalToWorld(fin.massCenter)
 
     fin.angleOfAttack = 0
 
@@ -314,6 +314,8 @@ end
 
 function Fin3.fin:think()
     self:calcBaseData()
+
+    if not IsValid(self.rootPhys) then return end
 
     if self.velVector == vector_origin then
         self.ent:SetNW2Vector("fin3_liftVector", vector_origin)

@@ -205,7 +205,7 @@ function Fin3.propeller:remove()
     duplicator.ClearEntityModifier(self.ent, "fin3_propeller")
 end
 
-hook.Add("Think", "fin3_propellerthink", function()
+hook.Add("Tick", "fin3_propellerthink", function()
     for _, propeller in pairs(Fin3.propellers) do
         if not IsValid(propeller.ent) then
             propeller:remove()

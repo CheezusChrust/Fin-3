@@ -369,7 +369,7 @@ function Fin3.fin:remove()
     duplicator.ClearEntityModifier(self.ent, "fin3")
 end
 
-hook.Add("Think", "fin3_think", function()
+hook.Add("Tick", "fin3_think", function()
     for _, fin in pairs(Fin3.fins) do
         if not IsValid(fin.ent) then
             fin:remove()

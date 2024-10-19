@@ -53,6 +53,9 @@ function Fin3.propeller:new(ply, ent, data)
     propeller.bladePitch = data.bladePitch
     propeller.invertRotation = data.invertRotation
 
+    propeller.lastTorque = 0
+    propeller.lastForce = 0
+
     if data.invertRotation then
         propeller.bladePitch = -propeller.bladePitch
     end
@@ -162,6 +165,13 @@ function Fin3.propeller:think()
     local liftCoef, dragCoef = self:calcCoefficients(alpha)
     local liftForceNewtons, dragForceNewtons = self:calcForces(airspeed, alpha, liftCoef, dragCoef)
     local finalForwardForceN, finalTorqueNm = self:calcForceComponents(liftForceNewtons, dragForceNewtons, airflowAngle, alpha)
+
+    -- Low pass filter to try to dampen any unwanted oscillations in low inertia/weight situations
+    finalForwardForceN = self.lastForce * 0.6 + finalForwardForceN * 0.4
+    finalTorqueNm = self.lastTorque * 0.6 + finalTorqueNm * 0.4
+
+    self.lastForce = finalForwardForceN
+    self.lastTorque = finalTorqueNm
 
     ent:SetNW2Float("fin3_propeller_thrust", finalForwardForceN)
     ent:SetNW2Float("fin3_propeller_torque", finalTorqueNm)

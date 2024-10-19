@@ -4,25 +4,38 @@ local clamp = math.Clamp
 
 __e2setcost(1)
 
-e2function void entity:fin3SetBladePitch(number bladePitch)
-    local propeller = Fin3.propellers[this]
-    if not IsValid(this) or not propeller then return end
+-- Fin functions
+do
+    e2function number entity:fin3GetAngleOfAttack()
+        local fin = Fin3.fins[this]
+        if not IsValid(this) or not fin then return 0 end
 
-    bladePitch = clamp(bladePitch, -90, 90)
-
-    propeller.ent:SetNW2Float("fin3_propeller_bladePitch", bladePitch)
-    
-    if propeller.invertRotation then
-        bladePitch = -bladePitch
+        return fin.angleOfAttack
     end
-
-    propeller.bladePitch = bladePitch
 end
 
-[nodiscard]
-e2function number entity:fin3GetBladePitch()
-    local propeller = Fin3.propellers[this]
-    if not IsValid(this) or not propeller then return 0 end
+-- Propeller functions
+do
+    e2function void entity:fin3SetBladePitch(number bladePitch)
+        local propeller = Fin3.propellers[this]
+        if not IsValid(this) or not propeller then return end
 
-    return propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch
+        bladePitch = clamp(bladePitch, -90, 90)
+
+        propeller.ent:SetNW2Float("fin3_propeller_bladePitch", bladePitch)
+        
+        if propeller.invertRotation then
+            bladePitch = -bladePitch
+        end
+
+        propeller.bladePitch = bladePitch
+    end
+
+    [nodiscard]
+    e2function number entity:fin3GetBladePitch()
+        local propeller = Fin3.propellers[this]
+        if not IsValid(this) or not propeller then return 0 end
+
+        return propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch
+    end
 end

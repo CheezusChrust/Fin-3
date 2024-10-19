@@ -57,6 +57,16 @@ do
 
         return propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch
     end
+
+    --- Returns the RPM of a Fin 3 propeller
+    -- @server
+    -- @return number RPM
+    function ents_methods:fin3GetPropellerRPM()
+        local propeller = Fin3.propellers[unwrap(self)]
+        if not propeller then return 0 end
+
+        return propeller.rpm
+    end
 end
 
 end

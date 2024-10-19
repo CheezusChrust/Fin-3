@@ -38,4 +38,12 @@ do
 
         return propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch
     end
+
+    [nodiscard]
+    e2function number entity:fin3GetPropellerRPM()
+        local propeller = Fin3.propellers[this]
+        if not IsValid(this) or not propeller then return 0 end
+
+        return propeller.rpm
+    end
 end

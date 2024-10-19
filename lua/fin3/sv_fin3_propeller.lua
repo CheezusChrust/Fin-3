@@ -53,6 +53,7 @@ function Fin3.propeller:new(ply, ent, data)
     propeller.bladePitch = data.bladePitch
     propeller.invertRotation = data.invertRotation
 
+    propeller.rpm = 0
     propeller.lastTorque = 0
     propeller.lastForce = 0
 
@@ -170,13 +171,15 @@ function Fin3.propeller:think()
     finalForwardForceN = self.lastForce * 0.6 + finalForwardForceN * 0.4
     finalTorqueNm = self.lastTorque * 0.6 + finalTorqueNm * 0.4
 
+    local rpm = -rotVel / 6
+    self.rpm = rpm
     self.lastForce = finalForwardForceN
     self.lastTorque = finalTorqueNm
 
     ent:SetNW2Float("fin3_propeller_thrust", finalForwardForceN)
     ent:SetNW2Float("fin3_propeller_torque", finalTorqueNm)
     ent:SetNW2Float("fin3_propeller_aoa", alpha)
-    ent:SetNW2Float("fin3_propeller_rpm", -rotVel / 6)
+    ent:SetNW2Float("fin3_propeller_rpm", rpm)
 
     local worldForward = Fin3.localToWorldVector(ent, forwardAxis)
     phys:ApplyForceCenter(worldForward * finalForwardForceN * 39.3701 * dt)

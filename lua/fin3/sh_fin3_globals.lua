@@ -24,6 +24,7 @@ if SERVER then
 
     util.AddNetworkString("fin3_networkfinids")
     util.AddNetworkString("fin3_networkpropellerids")
+    util.AddNetworkString("fin3_centeroflift")
 else
     CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)

@@ -6,6 +6,7 @@ if CLIENT then
         { name = "left", stage = 0 },
         { name = "right", stage = 0 },
         { name = "reload", stage = 0 },
+        { name = "centeroflift", stage = 0, icon = "gui/lmb.png", icon2 = "gui/info" },
 
         { name = "stage1.definefwd", icon = "gui/lmb.png", stage = 1 },
         { name = "stage1.definefwd2", icon = "gui/lmb.png", icon2 = "gui/info", stage = 1 },
@@ -43,6 +44,27 @@ end
 
 function TOOL:LeftClick(trace)
     local ent = trace.Entity
+    local owner = self:GetOwner()
+
+    if owner:KeyDown(IN_SPEED) and IsValid(ent) then
+        if SERVER and CFW then
+            local centerOfLift = Fin3.calcCenterOfLift(ent:GetContraption() or ent)
+
+            if centerOfLift ~= vector_origin then
+                net.Start("fin3_centeroflift")
+                net.WriteFloat(centerOfLift.x)
+                net.WriteFloat(centerOfLift.y)
+                net.WriteFloat(centerOfLift.z)
+                net.Send(owner)
+            end
+        end
+
+        if CLIENT and not CFW and IsFirstTimePredicted() then
+            chat.AddText(Color(255, 0, 0), "[Fin 3] Contraption Framework is required to calculate the center of lift.")
+        end
+
+        return true
+    end
 
     local stage = self:GetStage()
 
@@ -50,7 +72,6 @@ function TOOL:LeftClick(trace)
         return false
     end
 
-    local owner = self:GetOwner()
     local finType = owner:GetInfo("fin3_fintype")
 
     if stage == 0 then

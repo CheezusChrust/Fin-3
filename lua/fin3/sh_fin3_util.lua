@@ -4,6 +4,8 @@ function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
 
+local sign = Fin3.sign
+
 --- Calculates a value along a Catmull-Rom spline
 ---@param points table Table of points to interpolate
 ---@param pos number Position to interpolate at
@@ -168,6 +170,33 @@ if SERVER then
         end
 
         net.Send(ply)
+    end
+
+    function Fin3.calcCenterOfLift(contraption)
+        local centerOfLift = vector_origin
+        local totalArea = 0
+
+        local ents = istable(contraption) and contraption.ents or {[contraption] = true}
+
+        for ent in pairs(ents) do
+            local fin = Fin3.fins[ent]
+
+            if fin then
+                local pos = fin.ent:LocalToWorld(fin.massCenter)
+                local area = fin.surfaceArea * fin.efficiency
+                local upAxisWorld = Fin3.localToWorldVector(fin.ent, fin.upAxis)
+                local upFactor = sign(upAxisWorld:Dot(vector_up)) -- Only factor in the up facing components
+
+                centerOfLift = centerOfLift + pos * area * upFactor
+                totalArea = totalArea + area * upFactor
+            end
+        end
+
+        if totalArea > 0 then
+            centerOfLift = centerOfLift / totalArea
+        end
+
+        return centerOfLift
     end
 else
     function Fin3.requestAllFins()

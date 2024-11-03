@@ -5,6 +5,7 @@ local sqrt, abs, max = math.sqrt, math.abs, math.max
 local sin, cos, deg2rad = math.sin, math.cos, math.pi / 180
 local setFont, getTextSize = surface.SetFont, surface.GetTextSize
 local drawRoundedBoxEx, drawText, drawBeam = draw.RoundedBoxEx, draw.DrawText, render.DrawBeam
+local drawWireframeSphere = render.DrawWireframeSphere
 local drawSimpleTextOutlined = draw.SimpleTextOutlined
 local setColorMaterialIgnoreZ = render.SetColorMaterialIgnoreZ
 local camStart3D, camEnd3D = cam.Start3D, cam.End3D
@@ -17,8 +18,16 @@ local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
 local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
 
-local RED, GREEN = Color(255, 0, 0), Color(0, 255, 0)
+local RED, GREEN, LIGHTBLUE = Color(255, 0, 0), Color(0, 255, 0), Color(0, 255, 255)
 local BACKGROUND = Color(0, 0, 0, 230)
+
+local centerOfLift = vector_origin
+local lastCenterOfLiftTime = 0
+
+net.Receive("fin3_centeroflift", function()
+    centerOfLift = Vector(net.ReadFloat(), net.ReadFloat(), net.ReadFloat())
+    lastCenterOfLiftTime = CurTime()
+end)
 
 net.Receive("fin3_networkfinids", function()
     for _ = 1, net.ReadUInt(10) do
@@ -56,6 +65,15 @@ local function pushGetAvg(value, tbl, samples)
     end
 
     return sum / #tbl
+end
+
+local function drawCenterOfLift()
+    local textPos = (centerOfLift + Vector(0, 0, 8)):ToScreen()
+    drawSimpleTextOutlined("Center of Lift", "DermaDefault", textPos.x, textPos.y, LIGHTBLUE, 1, 1, 1, color_black)
+
+    cam.Start3D()
+        drawWireframeSphere(centerOfLift, 4, 8, 8, LIGHTBLUE)
+    cam.End3D()
 end
 
 local function drawDebugInfo()
@@ -361,6 +379,10 @@ end
 hook.Add("HUDPaint", "fin3_hud", function()
     drawDebugInfo()
     drawPropellerDebugInfo()
+
+    if CurTime() - lastCenterOfLiftTime < 10 then
+        drawCenterOfLift()
+    end
 
     local localPly = LocalPlayer()
     local wep = localPly:GetActiveWeapon()

@@ -13,7 +13,6 @@ local format = string.format
 local allowedClasses, localToWorldVector = Fin3.allowedClasses, Fin3.localToWorldVector
 local getPhrase = language.GetPhrase
 
-local cvarDebugEnabled = GetConVar("fin3_debug")
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
 local cvarShowForces = GetConVar("fin3_debug_showforces")
 local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
@@ -77,8 +76,6 @@ local function drawCenterOfLift()
 end
 
 local function drawDebugInfo()
-    if not cvarDebugEnabled:GetBool() then return end
-
     local showVectors = cvarShowVectors:GetBool()
     local showForces = cvarShowForces:GetBool()
 

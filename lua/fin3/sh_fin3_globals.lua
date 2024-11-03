@@ -32,9 +32,8 @@ else
     CreateClientConVar("fin3_induceddrag", "1", false, true, "The multiplier for induced drag", 0, 1)
     CreateClientConVar("fin3_lowpass", "0", false, true, "Whether or not to apply a low-pass filter to the fin's calculations", 0, 1)
 
-    CreateClientConVar("fin3_debug", "0", false, true, "Whether or not to draw debug information on all fins owned by you", 0, 1)
-    CreateClientConVar("fin3_debug_showvectors", "1", true, true, "Whether or not to draw the lift and drag vectors", 0, 1)
-    CreateClientConVar("fin3_debug_showforces", "1", true, true, "Whether or not to display forces applied for lift and drag", 0, 1)
+    CreateClientConVar("fin3_debug_showvectors", "0", false, true, "Whether or not to draw the lift and drag vectors", 0, 1)
+    CreateClientConVar("fin3_debug_showforces", "0", false, true, "Whether or not to display forces applied for lift and drag", 0, 1)
 
     CreateClientConVar("fin3_propeller_bladecount", "2", false, true, "The number of blades on the propeller", 2, 6)
     CreateClientConVar("fin3_propeller_diameter", "2", false, true, "The diameter of the propeller, in meters", 0.1, 6)

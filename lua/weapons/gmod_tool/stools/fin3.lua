@@ -263,6 +263,24 @@ function TOOL.BuildCPanel(cp)
     panel:AddSlider("#tool.fin3.induceddrag", 0, 1, 2, "fin3_induceddrag"):DockMargin(0, 0, 0, 0)
     panel:AddHelpText("#tool.fin3.induceddrag.info")
 
+    -- Debug settings
+    do
+        local showVectors = panel:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_debug_showvectors")
+        local showForces = panel:AddCheckbox("#tool.fin3.debug.showforces", "fin3_debug_showforces")
+
+        function showVectors:OnChange(val)
+            if val then
+                Fin3.requestAllFins()
+            end
+        end
+
+        function showForces:OnChange(val)
+            if val then
+                Fin3.requestAllFins()
+            end
+        end
+    end
+
     -- Advanced settings
     do
         local advancedCheckbox = panel:AddCheckbox("#tool.fin3.advanced")
@@ -275,31 +293,5 @@ function TOOL.BuildCPanel(cp)
         function advancedCheckbox:OnChange()
             advancedSettingsContainer:SetVisible(self:GetChecked())
         end
-    end
-
-    -- Debug settings
-    do
-        local debugEnabled = GetConVar("fin3_debug"):GetBool()
-        local debugCheckbox = panel:AddCheckbox("#tool.fin3.debug", "fin3_debug")
-        debugCheckbox:SetValue(debugEnabled)
-        local debugContainer = panel:AddHideableContainer()
-        debugContainer:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_debug_showvectors"):DockMargin(5, 5, 5, 5)
-        debugContainer:AddCheckbox("#tool.fin3.debug.showforces", "fin3_debug_showforces"):DockMargin(5, 5, 5, 5)
-        debugContainer:SetVisible(not debugEnabled)
-
-        function debugCheckbox:OnChange()
-            debugContainer:SetVisible(self:GetChecked())
-        end
-
-        cvars.RemoveChangeCallback("fin3_debug", "fin3_debug_callback")
-        cvars.AddChangeCallback("fin3_debug", function(_, _, debug)
-            local enable = debug == "1"
-            debugCheckbox:SetChecked(enable)
-            debugContainer:SetVisible(not enable)
-
-            if enable then
-                Fin3.requestAllFins()
-            end
-        end, "fin3_debug_callback")
     end
 end

@@ -9,7 +9,7 @@ if SERVER then
     AddCSLuaFile("fin3/sh_fin3_globals.lua")
     AddCSLuaFile("fin3/sh_fin3_util.lua")
     AddCSLuaFile("fin3/sh_fin3_models.lua")
-    resource.AddFile("resource/localization/en/fin3.properties")
+    resource.AddWorkshop("3113528615")
 else
     include("fin3/cl_fin3_hud.lua")
 end

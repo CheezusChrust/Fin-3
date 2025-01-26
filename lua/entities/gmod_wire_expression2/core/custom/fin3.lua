@@ -6,6 +6,7 @@ __e2setcost(1)
 
 -- Fin functions
 do
+    [nodiscard]
     e2function number entity:fin3GetAngleOfAttack()
         local fin = Fin3.fins[this]
         if not IsValid(this) or not fin then return 0 end
@@ -44,6 +45,6 @@ do
         local propeller = Fin3.propellers[this]
         if not IsValid(this) or not propeller then return 0 end
 
-        return propeller.rpm
+        return propeller.invertRotation and -propeller.rpm or propeller.rpm
     end
 end

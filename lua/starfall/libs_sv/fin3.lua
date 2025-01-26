@@ -65,7 +65,7 @@ do
         local propeller = Fin3.propellers[unwrap(self)]
         if not propeller then return 0 end
 
-        return propeller.rpm
+        return propeller.invertRotation and -propeller.rpm or propeller.rpm
     end
 end
 

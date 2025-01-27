@@ -2,7 +2,6 @@ local sin, cos, atan2 = math.sin, math.cos, math.atan2
 local pi = math.pi
 local abs, sign = math.abs, Fin3.sign
 local sqrt = math.sqrt
-local calcLinearInterp = Fin3.calcLinearInterp
 local dt = engine.TickInterval()
 local rad2deg = 180 / pi
 local deg2rad = pi / 180
@@ -103,18 +102,18 @@ end
 function Fin3.propeller:calcCoefficients(alpha)
     local liftCoef
     local dragCoef
+    local symmetrical = Fin3.models.symmetrical
+    local flat = Fin3.models.flat
 
     alpha = abs(alpha)
 
     if alpha < 90 then
-        liftCoef = calcLinearInterp(Fin3.models.symmetrical.interpolatedCurves.lift, alpha + 91)
-        dragCoef = calcLinearInterp(Fin3.models.symmetrical.interpolatedCurves.drag, alpha + 91)
+        liftCoef = Fin3.calcLiftCoef(alpha, symmetrical.stallAngle, symmetrical.liftCoefPeakPreStall, symmetrical.liftCoefPeakPostStall)
+        dragCoef = Fin3.calcDragCoef(alpha, symmetrical.stallAngle, symmetrical.dragCoefPeakPreStall, symmetrical.dragCoefPeakPostStall)
     else
-        liftCoef = calcLinearInterp(Fin3.models.flat.interpolatedCurves.lift, 271 - alpha)
-        dragCoef = calcLinearInterp(Fin3.models.flat.interpolatedCurves.drag, 271 - alpha)
+        liftCoef = Fin3.calcLiftCoef(180 - alpha, flat.stallAngle, flat.liftCoefPeakPreStall, flat.liftCoefPeakPostStall)
+        dragCoef = Fin3.calcDragCoef(180 - alpha, flat.stallAngle, flat.dragCoefPeakPreStall, flat.dragCoefPeakPostStall)
     end
-
-    liftCoef = abs(liftCoef)
 
     --print("Lift Coef: " .. math.Round(liftCoef, 2), "Drag Coef: " .. math.Round(dragCoef, 2))
 

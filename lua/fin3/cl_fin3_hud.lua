@@ -114,8 +114,9 @@ local function drawDebugInfo()
                     local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
                     local liftForceStr = getForceString(liftVector:Length())
                     local dragForceStr = getForceString(dragVector:Length())
+                    local AoA = fin:GetNW2Float("fin3_aoa", 0)
 
-                    local text = format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
+                    local text = format("Lift: %s\nDrag: %s\nAoA: %.1f°", liftForceStr, dragForceStr, AoA)
                     setFont("Trebuchet18")
                     local textWidth, textHeight = getTextSize(text)
                     textWidth = textWidth + 10

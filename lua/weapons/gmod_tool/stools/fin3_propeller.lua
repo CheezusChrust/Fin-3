@@ -128,10 +128,10 @@ function TOOL.BuildCPanel(cp)
 
     -- Debug settings
     do
-        panel:AddCheckbox("#tool.fin3_propeller.debuginfo", "fin3_propeller_debug_showforces")
+        panel:AddCheckbox("#tool.fin3_propeller.debuginfo", "fin3_propeller_debug_showdata")
 
-        cvars.RemoveChangeCallback("fin3_propeller_debug_showforces", "fin3_debug_callback")
-        cvars.AddChangeCallback("fin3_propeller_debug_showforces", function(_, _, debug)
+        cvars.RemoveChangeCallback("fin3_propeller_debug_showdata", "fin3_debug_callback")
+        cvars.AddChangeCallback("fin3_propeller_debug_showdata", function(_, _, debug)
             local enable = debug == "1"
 
             if enable then

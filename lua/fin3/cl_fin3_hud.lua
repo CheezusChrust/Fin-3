@@ -14,8 +14,8 @@ local allowedClasses, localToWorldVector = Fin3.allowedClasses, Fin3.localToWorl
 local getPhrase = language.GetPhrase
 
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
-local cvarShowForces = GetConVar("fin3_debug_showforces")
-local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
+local cvarShowData = GetConVar("fin3_debug_showdata")
+local cvarPropellerShowData = GetConVar("fin3_propeller_debug_showdata")
 
 local RED, GREEN, LIGHTBLUE = Color(255, 0, 0), Color(0, 255, 0), Color(0, 255, 255)
 local BACKGROUND = Color(0, 0, 0, 230)
@@ -77,9 +77,9 @@ end
 
 local function drawDebugInfo()
     local showVectors = cvarShowVectors:GetBool()
-    local showForces = cvarShowForces:GetBool()
+    local showData = cvarShowData:GetBool()
 
-    if showVectors or showForces then
+    if showVectors or showData then
         for index in pairs(fins) do
             local fin = Entity(index)
 
@@ -107,7 +107,7 @@ local function drawDebugInfo()
                     end
                 end
 
-                if showForces and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                if showData and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
                     local screenPos = finPos:ToScreen()
 
                     local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
@@ -239,9 +239,9 @@ local rpmAvgs = {}
 local torqueAvgs = {}
 
 local function drawPropellerDebugInfo()
-    local showForces = cvarPropellerShowForces:GetBool()
+    local showData = cvarPropellerShowData:GetBool()
 
-    if showForces then
+    if showData then
         for index in pairs(propellers) do
             local propeller = Entity(index)
 

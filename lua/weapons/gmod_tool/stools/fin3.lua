@@ -266,7 +266,7 @@ function TOOL.BuildCPanel(cp)
     -- Debug settings
     do
         local showVectors = panel:AddCheckbox("#tool.fin3.debug.showvectors", "fin3_debug_showvectors")
-        local showForces = panel:AddCheckbox("#tool.fin3.debug.showforces", "fin3_debug_showforces")
+        local showData = panel:AddCheckbox("#tool.fin3.debug.showdata", "fin3_debug_showdata")
 
         function showVectors:OnChange(val)
             if val then
@@ -274,7 +274,7 @@ function TOOL.BuildCPanel(cp)
             end
         end
 
-        function showForces:OnChange(val)
+        function showData:OnChange(val)
             if val then
                 Fin3.requestAllFins()
             end

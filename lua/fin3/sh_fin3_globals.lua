@@ -26,9 +26,9 @@ if SERVER then
     util.AddNetworkString("fin3_networkpropellerids")
     util.AddNetworkString("fin3_centeroflift")
 else
-    CreateClientConVar("fin3_fintype", "symmetrical", false, true, "The type of airfoil to use for the fin")
+    CreateClientConVar("fin3_fintype", "standard", false, true, "The type of airfoil to use for the fin")
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
-    CreateClientConVar("fin3_zeroliftangle", "2", false, true, "The negative angle of attack at which the fin produces no lift", 1, 8)
+    CreateClientConVar("fin3_camber", "0", false, true, "The amount of camber the wing should have, as a value from 0% to 100%", 0, 100)
     CreateClientConVar("fin3_induceddrag", "1", false, true, "The multiplier for induced drag", 0, 1)
     CreateClientConVar("fin3_lowpass", "0", false, true, "Whether or not to apply a low-pass filter to the fin's calculations", 0, 1)
 

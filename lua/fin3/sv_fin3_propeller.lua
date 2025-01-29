@@ -102,17 +102,17 @@ end
 function Fin3.propeller:calcCoefficients(alpha)
     local liftCoef
     local dragCoef
-    local symmetrical = Fin3.models.symmetrical
-    local flat = Fin3.models.flat
+    local propModel = Fin3.models.propeller
+    local flatModel = Fin3.models.flat
 
     alpha = abs(alpha)
 
     if alpha < 90 then
-        liftCoef = Fin3.calcLiftCoef(alpha, symmetrical.stallAngle, symmetrical.liftCoefPeakPreStall, symmetrical.liftCoefPeakPostStall)
-        dragCoef = Fin3.calcDragCoef(alpha, symmetrical.stallAngle, symmetrical.dragCoefPeakPreStall, symmetrical.dragCoefPeakPostStall)
+        liftCoef = Fin3.calcLiftCoef(alpha, propModel.stallAngle, propModel.liftCoefPeakPreStall, propModel.liftCoefPeakPostStall)
+        dragCoef = Fin3.calcDragCoef(alpha, propModel.stallAngle, propModel.dragCoefPeakPreStall, propModel.dragCoefPeakPostStall)
     else
-        liftCoef = Fin3.calcLiftCoef(180 - alpha, flat.stallAngle, flat.liftCoefPeakPreStall, flat.liftCoefPeakPostStall)
-        dragCoef = Fin3.calcDragCoef(180 - alpha, flat.stallAngle, flat.dragCoefPeakPreStall, flat.dragCoefPeakPostStall)
+        liftCoef = Fin3.calcLiftCoef(180 - alpha, flatModel.stallAngle, flatModel.liftCoefPeakPreStall, flatModel.liftCoefPeakPostStall)
+        dragCoef = Fin3.calcDragCoef(180 - alpha, flatModel.stallAngle, flatModel.dragCoefPeakPreStall, flatModel.dragCoefPeakPostStall)
     end
 
     --print("Lift Coef: " .. math.Round(liftCoef, 2), "Drag Coef: " .. math.Round(dragCoef, 2))

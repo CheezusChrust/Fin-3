@@ -8,23 +8,20 @@ Fin3.models = {
         dragCoefPeakPostStall = 1.82
     },
 
-    -- https://web.archive.org/web/20041101225159/http://www.prod.sandia.gov/cgi-bin/techlib/access-control.pl/1980/802114.pdf
-    -- "Aerodynamic Characteristics of Seven Symmetrical Airfoil Sections Through 180-Degree Angle of Attack"
-    symmetrical = {
-        stallAngle = 16,
+    standard = {
+        stallAngle = 15,
         liftCoefPeakPreStall = 1.5,
         liftCoefPeakPostStall = 1.05,
         dragCoefPeakPreStall = 0.05,
         dragCoefPeakPostStall = 1.82
     },
 
-    -- https://web.archive.org/web/20240925030940/http://airfoiltools.com/airfoil/details?airfoil=naca4412-il
-    cambered = {
-        isCambered = true,
-        stallAngle = 16,
-        liftCoefPeakPreStall = 1.6,
-        liftCoefPeakPostStall = 1.05,
+    propeller = {
+        stallAngle = 15,
+        liftCoefPeakPreStall = 1.15,
+        liftCoefPeakPostStall = 0.95,
         dragCoefPeakPreStall = 0.05,
-        dragCoefPeakPostStall = 1.82
+        dragCoefPeakPostStall = 1.82,
+        hidden = true
     }
 }

@@ -80,7 +80,7 @@ function TOOL:LeftClick(trace)
                 upAxis = Fin3.fins[ent].upAxis,
                 forwardAxis = Fin3.fins[ent].forwardAxis,
                 finType = finType,
-                zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+                camber = owner:GetInfoNum("fin3_camber", 0),
                 efficiency = owner:GetInfoNum("fin3_efficiency", 1),
                 inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
                 lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
@@ -117,7 +117,7 @@ function TOOL:LeftClick(trace)
             upAxis = upAxis,
             forwardAxis = forwardAxis,
             finType = finType,
-            zeroLiftAngle = finType == "cambered" and owner:GetInfoNum("fin3_zeroliftangle", 1) or 0,
+            camber = owner:GetInfoNum("fin3_camber", 0),
             efficiency = owner:GetInfoNum("fin3_efficiency", 1),
             inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
             lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
@@ -177,8 +177,8 @@ function TOOL:RightClick(trace)
         local owner = self:GetOwner()
         owner:ConCommand("fin3_fintype " .. fin.finType)
 
-        if fin.zeroLiftAngle and fin.zeroLiftAngle ~= 0 then
-            owner:ConCommand("fin3_zeroliftangle " .. fin.zeroLiftAngle)
+        if fin.camber ~= 0 then
+            owner:ConCommand("fin3_camber " .. fin.camber)
         end
 
         owner:ConCommand("fin3_efficiency " .. fin.efficiency)
@@ -214,45 +214,65 @@ end
 
 if SERVER then return end
 
+local getPhrase = language.GetPhrase
+
 function TOOL.BuildCPanel(cp)
     local panel = vgui.Create("fin3_panel", cp)
     panel:Dock(TOP)
     panel:DockMargin(10, 0, 10, 0)
 
-    panel:AddInfoBox("#tool.fin3.info")
+    --panel:AddInfoBox("#tool.fin3.info")
 
     -- Fin type selection and per-type settings
     do
         local currentFinType = GetConVar("fin3_fintype"):GetString()
         local finTypeSelection = panel:AddComboBox("#tool.fin3.fintype", "#tool.fin3.fintype." .. currentFinType)
 
-        for name in pairs(Fin3.models) do
-            finTypeSelection:AddChoice("#tool.fin3.fintype." .. name, name)
+        for name, model in pairs(Fin3.models) do
+            if not model.hidden then
+                finTypeSelection:AddChoice("#tool.fin3.fintype." .. name, name)
+            end
         end
 
         local finTypeHelpText = panel:AddHelpText("#tool.fin3.fintype." .. currentFinType .. ".info")
         finTypeHelpText:DockMargin(10, 10, 10, 0)
-        local camberedSettingsContainer = panel:AddHideableContainer()
-        camberedSettingsContainer:AddLabel("#tool.fin3.fintype.specificsettings"):DockMargin(5, 5, 5, 0)
-        camberedSettingsContainer:AddSlider("#tool.fin3.fintype.specificsettings.zeroliftangle", 1, 8, 1, "fin3_zeroliftangle"):DockMargin(5, 0, 0, 0)
-        camberedSettingsContainer:SetVisible(currentFinType == "cambered")
+
+        local camberPanel = panel:AddHideableContainer()
+        camberPanel:DockMargin(0, 0, 0, 0)
+
+        camberPanel:AddSlider("#tool.fin3.camber", 0, 100, 0, "fin3_camber")
+        camberPanel:AddHelpText("#tool.fin3.camber.info")
+        camberPanel.Paint = function() end
+
+        local currentCamber = GetConVar("fin3_camber"):GetFloat()
+        local zeroLiftAngleLabel = camberPanel:AddLabel(getPhrase("tool.fin3.zeroliftangle") .. string.format(": %.1f°", currentCamber * 0.08))
+        zeroLiftAngleLabel:DockMargin(0, -5, 0, 0)
+        zeroLiftAngleLabel:SetVisible(currentCamber ~= 0)
+
+        camberPanel:SetVisible(currentFinType ~= "flat")
+
+        cvars.RemoveChangeCallback("fin3_camber", "fin3_camber_callback")
+        cvars.AddChangeCallback("fin3_camber", function(_, _, newCamber)
+            zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": %.1f°", newCamber * 0.08))
+            zeroLiftAngleLabel:SetVisible(newCamber ~= "0")
+            zeroLiftAngleLabel:InvalidateParent()
+        end, "fin3_camber_callback")
 
         function finTypeSelection:OnSelect(_, _, data)
             finTypeHelpText:SetText("#tool.fin3.fintype." .. data .. ".info")
-            camberedSettingsContainer:SetVisible(data == "cambered")
             RunConsoleCommand("fin3_fintype", data)
+            camberPanel:SetVisible(data ~= "flat")
         end
 
         cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")
         cvars.AddChangeCallback("fin3_fintype", function(_, oldFinType, newFinType)
-            if not Fin3.models[newFinType] then
+            if not Fin3.models[newFinType] or Fin3.models[newFinType].hidden then
                 MsgC(Color(255, 0, 0), "Invalid fin type: ", newFinType, "\n")
                 RunConsoleCommand("fin3_fintype", oldFinType)
             else
                 finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
                 finTypeHelpText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
-
-                camberedSettingsContainer:SetVisible(newFinType == "cambered")
+                camberPanel:SetVisible(newFinType ~= "flat")
             end
         end, "fin3_fintype_callback")
     end

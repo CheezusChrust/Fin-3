@@ -188,7 +188,7 @@ local function drawFin3Hud(localPly)
 
     local setUpAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_upAxis", vector_origin))
     local setForwardAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_forwardAxis", vector_origin))
-    local zeroLiftAngle = ent:GetNW2Float("fin3_zeroLiftAngle", 0)
+    local camber = ent:GetNW2Float("fin3_camber", 0)
     local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
     local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
     local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
@@ -213,7 +213,7 @@ local function drawFin3Hud(localPly)
 
     local text = format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
         getPhrase("tool.fin3.fintype." .. finType),
-        zeroLiftAngle ~= 0 and format("Zero Lift Angle: -%.1f°\n", zeroLiftAngle) or "",
+        finType ~= "flat" and format(getPhrase("tool.fin3.camber") .. ": %d%%\n", camber) or "",
         efficiency,
         surfaceArea * efficiency,
         aspectRatio,

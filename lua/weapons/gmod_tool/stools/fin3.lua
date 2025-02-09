@@ -83,7 +83,7 @@ function TOOL:LeftClick(trace)
                 camber = owner:GetInfoNum("fin3_camber", 0),
                 efficiency = owner:GetInfoNum("fin3_efficiency", 1),
                 inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
-                lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
+                disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1
             })
 
             return true
@@ -120,7 +120,7 @@ function TOOL:LeftClick(trace)
             camber = owner:GetInfoNum("fin3_camber", 0),
             efficiency = owner:GetInfoNum("fin3_efficiency", 1),
             inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
-            lowpass = owner:GetInfoNum("fin3_lowpass", 0) == 1
+            disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1
         })
 
         self:ClearSelection()
@@ -179,7 +179,7 @@ function TOOL:RightClick(trace)
         owner:ConCommand("fin3_camber " .. fin.camber)
         owner:ConCommand("fin3_efficiency " .. fin.efficiency)
         owner:ConCommand("fin3_induceddrag " .. fin.inducedDrag)
-        owner:ConCommand("fin3_lowpass " .. (fin.lowpass and 1 or 0))
+        owner:ConCommand("fin3_disableLowPass " .. (fin.disableLowPass and 1 or 0))
     end
 
     return Fin3.allowedClasses[class]
@@ -302,8 +302,8 @@ function TOOL.BuildCPanel(cp)
         local advancedCheckbox = panel:AddCheckbox("#tool.fin3.advanced")
         advancedCheckbox:SetValue(false)
         local advancedSettingsContainer = panel:AddHideableContainer()
-        advancedSettingsContainer:AddCheckbox("#tool.fin3.advanced.lowpass", "fin3_lowpass"):DockMargin(5, 5, 5, 0)
-        advancedSettingsContainer:AddHelpText("#tool.fin3.advanced.lowpass.info"):DockMargin(10, 5, 10, 5)
+        advancedSettingsContainer:AddCheckbox("#tool.fin3.advanced.disablelowpass", "fin3_disableLowPass"):DockMargin(5, 5, 5, 0)
+        advancedSettingsContainer:AddHelpText("#tool.fin3.advanced.disablelowpass.info"):DockMargin(10, 5, 10, 5)
         advancedSettingsContainer:SetVisible(false)
 
         function advancedCheckbox:OnChange()

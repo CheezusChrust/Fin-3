@@ -30,7 +30,7 @@ else
     CreateClientConVar("fin3_efficiency", "1", false, true, "The multiplier for the lift and drag forces", 0.1, 1.5)
     CreateClientConVar("fin3_camber", "0", false, true, "The amount of camber the wing should have, as a value from 0% to 100%", 0, 100)
     CreateClientConVar("fin3_induceddrag", "1", false, true, "The multiplier for induced drag", 0, 1)
-    CreateClientConVar("fin3_lowpass", "0", false, true, "Whether or not to apply a low-pass filter to the fin's calculations", 0, 1)
+    CreateClientConVar("fin3_disablelowpass", "0", false, true, "Whether or not to disable the low-pass filter in the fin's calculations", 0, 1)
 
     CreateClientConVar("fin3_debug_showvectors", "0", false, true, "Whether or not to draw the lift and drag vectors", 0, 1)
     CreateClientConVar("fin3_debug_showdata", "0", false, true, "Whether or not to display forces applied for lift and drag", 0, 1)

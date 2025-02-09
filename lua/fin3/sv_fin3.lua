@@ -16,7 +16,7 @@ Fin creation data table structure:
     inducedDrag: number [0 - 1]
     camber: number [0 - 100]
     efficiency: number [0.1 - 1.5]
-    lowpass: boolean
+    disableLowPass: boolean
 --]]
 
 --- Adds a new fin to an entity
@@ -69,7 +69,11 @@ function Fin3.fin:new(ply, ent, data)
         end
     end
 
-    fin.lowpass = data.lowpass or false
+    if data.lowpass ~= nil then
+        fin.disableLowPass = not data.lowpass
+    else
+        fin.disableLowPass = data.disableLowPass or false
+    end
 
     fin:calcSurfaceArea()
 
@@ -105,7 +109,7 @@ function Fin3.fin:new(ply, ent, data)
     ent:SetNW2Float("fin3_efficiency", fin.efficiency)
     ent:SetNW2Float("fin3_inducedDrag", fin.inducedDrag)
     ent:SetNW2Float("fin3_aoa", 0)
-    ent:SetNW2Bool("fin3_lowpass", fin.lowpass)
+    ent:SetNW2Bool("fin3_disableLowPass", fin.disableLowPass)
 
     fin.rootPhys = rootPhys
 
@@ -290,7 +294,7 @@ function Fin3.fin:calcLiftForceNewtons()
 
     -- low pass filter
     -- self.liftForceNewtons = self.lastLiftForceNewtons * (1 - alpha) + lift * alpha
-    self.liftForceNewtons = self.lowpass and (self.lastLiftForceNewtons * 0.5 + lift * 0.5) or lift
+    self.liftForceNewtons = self.disableLowPass and lift or (self.lastLiftForceNewtons * 0.6 + lift * 0.4)
     self.lastLiftForceNewtons = self.liftForceNewtons
 end
 
@@ -318,7 +322,7 @@ function Fin3.fin:calcDragForceNewtons()
 
     local drag = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
 
-    self.dragForceNewtons = self.lowpass and (self.lastDragForceNewtons * 0.5 + drag * 0.5) or drag
+    self.dragForceNewtons = self.disableLowPass and (self.lastDragForceNewtons * 0.6 + drag * 0.4) or drag
     self.lastDragForceNewtons = self.dragForceNewtons
 end
 
@@ -366,7 +370,7 @@ function Fin3.fin:remove()
         ent:SetNW2Float("fin3_camber", nil)
         ent:SetNW2Float("fin3_inducedDrag", nil)
         ent:SetNW2Float("fin3_aoa", nil)
-        ent:SetNW2Bool("fin3_lowpass", nil)
+        ent:SetNW2Bool("fin3_disableLowPass", nil)
         ent:SetNW2Bool("fin3_liftVector", nil)
         ent:SetNW2Bool("fin3_dragVector", nil)
         ent:SetNW2Bool("fin3_sweepAngle", nil)

@@ -195,7 +195,7 @@ local function drawFin3Hud(localPly)
     local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
     local sweepAngle = ent:GetNW2Float("fin3_sweepAngle", 0)
     local inducedDrag = ent:GetNW2Float("fin3_inducedDrag", 0)
-    local lowpass = ent:GetNW2Bool("fin3_lowpass", false)
+    local disableLowPass = ent:GetNW2Bool("fin3_disableLowPass", false)
 
     camStart3D()
         setColorMaterialIgnoreZ()
@@ -225,8 +225,8 @@ local function drawFin3Hud(localPly)
         text = text .. format("\nSweep Angle: %.1f°", sweepAngle)
     end
 
-    if lowpass then
-        text = text .. "\nLow-pass filter enabled"
+    if disableLowPass then
+        text = text .. "\nLow-pass filter disabled"
     end
 
     local textWidth, textHeight = getTextSize(text)

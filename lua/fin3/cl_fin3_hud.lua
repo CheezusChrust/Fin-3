@@ -1,6 +1,7 @@
 local fins = {}
 local propellers = {}
 
+local fin3Models = Fin3.models
 local sqrt, abs, max = math.sqrt, math.abs, math.max
 local sin, cos, deg2rad = math.sin, math.cos, math.pi / 180
 local setFont, getTextSize = surface.SetFont, surface.GetTextSize
@@ -213,7 +214,7 @@ local function drawFin3Hud(localPly)
 
     local text = format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
         getPhrase("tool.fin3.fintype." .. finType),
-        finType ~= "flat" and format(getPhrase("tool.fin3.camber") .. ": %d%%\n", camber) or "",
+        fin3Models[finType].canCamber and format(getPhrase("tool.fin3.camber") .. ": %d%%\n", camber) or "",
         efficiency,
         surfaceArea * efficiency,
         aspectRatio,

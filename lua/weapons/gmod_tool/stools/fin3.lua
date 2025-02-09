@@ -176,11 +176,7 @@ function TOOL:RightClick(trace)
     if fin then
         local owner = self:GetOwner()
         owner:ConCommand("fin3_fintype " .. fin.finType)
-
-        if fin.camber ~= 0 then
-            owner:ConCommand("fin3_camber " .. fin.camber)
-        end
-
+        owner:ConCommand("fin3_camber " .. fin.camber)
         owner:ConCommand("fin3_efficiency " .. fin.efficiency)
         owner:ConCommand("fin3_induceddrag " .. fin.inducedDrag)
         owner:ConCommand("fin3_lowpass " .. (fin.lowpass and 1 or 0))
@@ -245,15 +241,15 @@ function TOOL.BuildCPanel(cp)
         camberPanel.Paint = function() end
 
         local currentCamber = GetConVar("fin3_camber"):GetFloat()
-        local zeroLiftAngleLabel = camberPanel:AddLabel(getPhrase("tool.fin3.zeroliftangle") .. string.format(": %.1f°", currentCamber * 0.08))
+        local zeroLiftAngleLabel = camberPanel:AddLabel(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", currentCamber * 0.08))
         zeroLiftAngleLabel:DockMargin(0, -5, 0, 0)
         zeroLiftAngleLabel:SetVisible(currentCamber ~= 0)
 
-        camberPanel:SetVisible(currentFinType ~= "flat")
+        camberPanel:SetVisible(Fin3.models[currentFinType].canCamber)
 
         cvars.RemoveChangeCallback("fin3_camber", "fin3_camber_callback")
         cvars.AddChangeCallback("fin3_camber", function(_, _, newCamber)
-            zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": %.1f°", newCamber * 0.08))
+            zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", newCamber * 0.08))
             zeroLiftAngleLabel:SetVisible(newCamber ~= "0")
             zeroLiftAngleLabel:InvalidateParent()
         end, "fin3_camber_callback")
@@ -261,7 +257,7 @@ function TOOL.BuildCPanel(cp)
         function finTypeSelection:OnSelect(_, _, data)
             finTypeHelpText:SetText("#tool.fin3.fintype." .. data .. ".info")
             RunConsoleCommand("fin3_fintype", data)
-            camberPanel:SetVisible(data ~= "flat")
+            camberPanel:SetVisible(Fin3.models[data].canCamber)
         end
 
         cvars.RemoveChangeCallback("fin3_fintype", "fin3_fintype_callback")

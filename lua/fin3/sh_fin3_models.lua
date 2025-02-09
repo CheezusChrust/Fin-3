@@ -13,7 +13,13 @@ Fin3.models = {
         liftCoefPeakPreStall = 1.5,
         liftCoefPeakPostStall = 1.05,
         dragCoefPeakPreStall = 0.05,
-        dragCoefPeakPostStall = 1.82
+        dragCoefPeakPostStall = 1.82,
+        canCamber = true,
+
+        -- Values below are multiplied by camber amount - only used if canCamber is true
+        negativeAoACamberPeakLiftCoefPenalty = 0.4, -- Lift coefficient penalty for negative AoA
+        negativeAoACamberPeakStallAnglePenalty = 7.5, -- Stall angle penalty for negative AoA
+        positiveAoACamberStallAngleBonus = 1.5 -- Increase stall angle for positive AoA
     },
 
     propeller = {

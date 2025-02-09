@@ -254,16 +254,21 @@ function Fin3.fin:calcLiftForceNewtons()
     if self.forwardVel > 0 and self.finType ~= "flat" then
         fwdVelRatio = self.fwdVelRatio
 
-        local camber = self.camber
-        local zeroLiftAngle = camber * 0.08
-        local AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
-
-        local negativeAoACoefPenalty = AoAFinal < 0 and (camber / 100 * 0.4) or 0 -- Lift coefficient penalty of 0.4 per 100% camber at negative AoA
+        local AoAFinal = AoA
         local stallAngleMod = 0
-        if AoAFinal < 0 then
-            stallAngleMod = -camber / 100 * 7.5 -- Negative stall angle of attack penalty of 7.5 at 100% camber at negative AoA
-        else
-            stallAngleMod = camber / 100 * 1.5 -- Slight increase to the stall angle based on camber - make these less hard coded in the future
+        local negativeAoACoefPenalty = 0
+
+        if curModel.canCamber then
+            local camber = self.camber
+            local zeroLiftAngle = camber * 0.08
+            AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
+
+            if AoAFinal < 0 then
+                negativeAoACoefPenalty = camber / 100 * curModel.negativeAoACamberPeakLiftCoefPenalty
+                stallAngleMod = -camber / 100 * curModel.negativeAoACamberPeakStallAnglePenalty
+            else
+                stallAngleMod = camber / 100 * curModel.positiveAoACamberStallAngleBonus
+            end
         end
 
         local liftCoefForward = Fin3.calcLiftCoef(abs(AoAFinal), curModel.stallAngle + stallAngleMod, curModel.liftCoefPeakPreStall - negativeAoACoefPenalty, curModel.liftCoefPeakPostStall)

@@ -7,11 +7,10 @@ Up until this point, the only way to have an aircraft fly in a somewhat realisti
 Fin 3 brings to the table a more realistic option for aircraft enthusiasts.
 
 ## Features
-- 3 airfoil types, consisting of:
-    - A flat plate - quite bad flight characteristics, not many uses
-    - A symmetrical airfoil, which produces no lift at zero [angle of attack](https://en.wikipedia.org/wiki/Angle_of_attack) - good for control surfaces
-    - A cambered airfoil, which produces lift at zero AoA, useful for the main wing of an aircraft
-- Lift and drag profiles for each airfoil based on real data - *including stalling!*
+- 2 primary airfoil types, consisting of:
+    - A flat plate - stalls at quite a low angle of attack (around 5 degrees), works best as an air brake
+    - A standard airfoil - A customizable camber airfoil for general aviation use. Has a base stall angle of around 15 degrees, which slightly increases with higher camber
+- Lift and drag approximations based on real data - *including stalling!*
 - Full parenting support, unlike Fin 2 which required a constraint
 - Lift and drag forces are based on the fin's surface area, rather than the prop's mass
     - There is a slider to multiply the final lift/drag forces, ranging from 0.1x to 1.5x if needed

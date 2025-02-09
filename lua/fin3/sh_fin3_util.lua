@@ -1,4 +1,6 @@
-local floor, ceil, abs = math.floor, math.ceil, math.abs
+local abs = math.abs
+local sin, pi = math.sin, math.pi
+local min, max = math.min, math.max
 
 function Fin3.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
@@ -6,81 +8,43 @@ end
 
 local sign = Fin3.sign
 
---- Calculates a value along a Catmull-Rom spline
----@param points table Table of points to interpolate
----@param pos number Position to interpolate at
----@return number
-function Fin3.calcCatRomSpline(points, pos)
-    local count = #points
+--- Calculates the lift coefficient of a wing given the basic parameters
+--- https://www.desmos.com/calculator/xgpli0tqha
+--- @param angleOfAttack number Angle of attack in degrees
+--- @param stallAngle number Angle at which the wing stalls in degrees
+--- @param coefPeakPreStall number Coefficient of lift at the stall angle
+--- @param coefPeakPostStall number Coefficient of lift at 45 degrees AoA
+function Fin3.calcLiftCoef(angleOfAttack, stallAngle, coefPeakPreStall, coefPeakPostStall)
+    if angleOfAttack < stallAngle * 0.75 then -- Linear rise
+        return (angleOfAttack / stallAngle) * 1.138 * coefPeakPreStall
+    elseif angleOfAttack < stallAngle then -- Gradual peak
+        return sin((angleOfAttack * pi) / (stallAngle * 2)) ^ 2 * coefPeakPreStall
+    elseif angleOfAttack < 45 then -- Drop into post stall dynamics
+        local immediatePost = -(angleOfAttack - stallAngle) ^ 2 * 0.05 + coefPeakPreStall
+        local postStallFactor = 1 - min(coefPeakPreStall / coefPeakPostStall, 1.25)
+        local flatPre45 = sin((angleOfAttack * pi) / 90) ^ postStallFactor * coefPeakPostStall
 
-    if count < 3 then return 0 end
-
-    if pos <= points[1].x then
-        return points[1].y
-    elseif pos >= points[count].x then
-        return points[count].y
-    end
-
-    local left, right = 1, count
-    while left + 1 < right do
-        local mid = math.floor((left + right) / 2)
-        if pos < points[mid].x then
-            right = mid
-        else
-            left = mid
-        end
-    end
-
-    local current = left
-
-    local t  = (pos - points[current].x) / (points[current + 1].x - points[current].x)
-    local p0 = points[current - 1] and points[current - 1].y or points[current].y
-    local p1 = points[current].y
-    local p2 = points[current + 1].y
-    local p3 = points[current + 2] and points[current + 2].y or points[current + 1].y
-
-    return 0.5 * ((2 * p1) +
-        (p2 - p0) * t +
-        (2 * p0 - 5 * p1 + 4 * p2 - p3) * t ^ 2 +
-        (3 * p1 - p0 - 3 * p2 + p3) * t ^ 3)
-end
-
-function Fin3.createInterpolatedCurves()
-    for _, model in pairs(Fin3.models) do
-        if not model.interpolatedCurves then
-            model.interpolatedCurves = {}
-        end
-
-        for curveType, curveData in pairs(model.curves) do
-            local interpolated = {}
-
-            for i = -90, 90 do
-                if model.isCambered then
-                    interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, i)
-                else
-                    local curveSign = (curveType == "lift" and Fin3.sign(i) or 1)
-                    interpolated[#interpolated + 1] = Fin3.calcCatRomSpline(curveData, abs(i)) * curveSign
-                end
-            end
-
-            model.interpolatedCurves[curveType] = interpolated
-        end
+        return max(immediatePost, flatPre45)
+    else -- Deep stall, 45 to 90 degrees
+        return sin((angleOfAttack * pi) / 90) * coefPeakPostStall
     end
 end
 
-Fin3.createInterpolatedCurves()
+--- Calculates the drag coefficient of a wing given the basic parameters
+--- https://www.desmos.com/calculator/p6sd97dpwi
+--- @param angleOfAttack number Angle of attack in degrees
+--- @param stallAngle number Angle at which the wing stalls in degrees
+--- @param coefPeakPreStall number Coefficient of drag at the stall angle
+--- @param coefPeakPostStall number Coefficient of drag at 90 degrees AoA
+function Fin3.calcDragCoef(angleOfAttack, stallAngle, coefPeakPreStall, coefPeakPostStall)
+    if angleOfAttack < stallAngle then
+        return angleOfAttack / stallAngle * coefPeakPreStall
+    else
+        local immediatePost = 0.1 * angleOfAttack + (coefPeakPreStall - 0.1 * stallAngle)
+        local flat = sin((angleOfAttack * pi) / 180) * coefPeakPostStall
 
---- Calculates a value on an array of points using linear interpolation
----@param points table Table of points to interpolate
----@param pos number Position to interpolate at
----@return number
-function Fin3.calcLinearInterp(points, pos)
-    local curValue = points[floor(pos)] or points[1]
-    local nextValue = points[ceil(pos)] or points[#points]
-
-    local perc = pos % 1
-
-    return Lerp(perc, curValue, nextValue)
+        return min(immediatePost, flat)
+    end
 end
 
 -- Vector functions

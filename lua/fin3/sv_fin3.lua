@@ -4,7 +4,6 @@ local localToWorldVector = Fin3.localToWorldVector
 local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
-local calcLinearInterp = Fin3.calcLinearInterp
 local dt = engine.TickInterval()
 
 Fin3.fin = {} -- Fin class
@@ -15,7 +14,7 @@ Fin creation data table structure:
     upAxis: vector
     forwardAxis: vector
     inducedDrag: number [0 - 1]
-    zeroLiftAngle: number [1 - 8]
+    camber: number [0 - 100]
     efficiency: number [0.1 - 1.5]
     lowpass: boolean
 --]]
@@ -48,11 +47,15 @@ function Fin3.fin:new(ply, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.selfPhys = ent:GetPhysicsObject()
-    fin.finType = data.finType
-    if fin.finType == "cambered" then
-        fin.zeroLiftAngle = data.zeroLiftAngle or 5
+    if data.finType == "cambered" or data.finType == "symmetrical" then
+        fin.finType = "standard"
     else
-        fin.zeroLiftAngle = 0
+        fin.finType = data.finType
+    end
+    if data.zeroLiftAngle then
+        fin.camber = data.zeroLiftAngle / 8 * 100
+    else
+        fin.camber = data.camber or 0
     end
     fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
 
@@ -98,9 +101,10 @@ function Fin3.fin:new(ply, ent, data)
     ent:SetNW2Vector("fin3_upAxis", fin.upAxis)
     ent:SetNW2Vector("fin3_forwardAxis", fin.forwardAxis)
     ent:SetNW2Vector("fin3_rightAxis", fin.rightAxis)
-    ent:SetNW2Float("fin3_zeroLiftAngle", fin.zeroLiftAngle)
+    ent:SetNW2Float("fin3_camber", fin.camber)
     ent:SetNW2Float("fin3_efficiency", fin.efficiency)
     ent:SetNW2Float("fin3_inducedDrag", fin.inducedDrag)
+    ent:SetNW2Float("fin3_aoa", 0)
     ent:SetNW2Bool("fin3_lowpass", fin.lowpass)
 
     fin.rootPhys = rootPhys
@@ -232,6 +236,8 @@ function Fin3.fin:calcBaseData()
         self.angleOfAttack = -deg(asin(self.velNorm:Dot(worldUpAxis)))
     end
 
+    ent:SetNW2Float("fin3_aoa", self.angleOfAttack)
+
     local side = self.velNorm:Cross(worldUpAxis)
     self.liftVector = -self.velNorm:Cross(side)
 end
@@ -240,21 +246,33 @@ function Fin3.fin:calcLiftForceNewtons()
     local flatModel = Fin3.models.flat
     local curModel = Fin3.models[self.finType]
     local liftCoef = 0
-    local liftCoefFlat = calcLinearInterp(flatModel.interpolatedCurves.lift, self.angleOfAttack + 91)
+    local AoA = self.angleOfAttack
+    local liftCoefFlat = Fin3.calcLiftCoef(abs(AoA), flatModel.stallAngle, flatModel.liftCoefPeakPreStall, flatModel.liftCoefPeakPostStall)
+    liftCoefFlat = liftCoefFlat * sign(AoA)
     local fwdVelRatio = 0
 
     if self.forwardVel > 0 and self.finType ~= "flat" then
         fwdVelRatio = self.fwdVelRatio
 
-        local AoA = self.angleOfAttack
         local AoAFinal = AoA
+        local stallAngleMod = 0
+        local negativeAoACoefPenalty = 0
 
-        if curModel.isCambered then
-            local AoAShiftFactor = cos(rad(AoAFinal))
-            AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
+        if curModel.canCamber then
+            local camber = self.camber
+            local zeroLiftAngle = camber * 0.08
+            AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
+
+            if AoAFinal < 0 then
+                negativeAoACoefPenalty = camber / 100 * curModel.negativeAoACamberPeakLiftCoefPenalty
+                stallAngleMod = -camber / 100 * curModel.negativeAoACamberPeakStallAnglePenalty
+            else
+                stallAngleMod = camber / 100 * curModel.positiveAoACamberStallAngleBonus
+            end
         end
 
-        local liftCoefForward = calcLinearInterp(curModel.interpolatedCurves.lift, AoAFinal + 91)
+        local liftCoefForward = Fin3.calcLiftCoef(abs(AoAFinal), curModel.stallAngle + stallAngleMod, curModel.liftCoefPeakPreStall - negativeAoACoefPenalty, curModel.liftCoefPeakPostStall)
+        liftCoefForward = liftCoefForward * sign(AoAFinal)
 
         liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
     else
@@ -280,20 +298,16 @@ function Fin3.fin:calcDragForceNewtons()
     local flatModel = Fin3.models.flat
     local curModel = Fin3.models[self.finType]
     local dragCoef = 0
-    local dragCoefFlat = calcLinearInterp(flatModel.interpolatedCurves.drag, self.angleOfAttack + 91)
+    local AoA = self.angleOfAttack
+    local dragCoefFlat = Fin3.calcDragCoef(abs(AoA), flatModel.stallAngle, flatModel.dragCoefPeakPreStall, flatModel.dragCoefPeakPostStall)
 
     if self.forwardVel > 0 and self.finType ~= "flat" then
         local fwdVelRatio = self.fwdVelRatio
 
-        local AoA = self.angleOfAttack
-        local AoAFinal = AoA
+        local zeroLiftAngle = self.camber * 0.08
+        local AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
 
-        if curModel.isCambered then
-            local AoAShiftFactor = cos(rad(AoAFinal))
-            AoAFinal = Lerp(fwdVelRatio, AoAFinal, AoAFinal + AoAShiftFactor * self.zeroLiftAngle)
-        end
-
-        local dragCoefForward = calcLinearInterp(curModel.interpolatedCurves.drag, AoAFinal + 91)
+        local dragCoefForward = Fin3.calcDragCoef(abs(AoAFinal), curModel.stallAngle, curModel.dragCoefPeakPreStall, curModel.dragCoefPeakPostStall)
 
         dragCoef = abs((dragCoefForward * fwdVelRatio) + (dragCoefFlat * (1 - fwdVelRatio)))
     else
@@ -349,8 +363,9 @@ function Fin3.fin:remove()
         ent:SetNW2Float("fin3_efficiency", nil)
         ent:SetNW2Float("fin3_surfaceArea", nil)
         ent:SetNW2Float("fin3_aspectRatio", nil)
-        ent:SetNW2Float("fin3_zeroLiftAngle", nil)
+        ent:SetNW2Float("fin3_camber", nil)
         ent:SetNW2Float("fin3_inducedDrag", nil)
+        ent:SetNW2Float("fin3_aoa", nil)
         ent:SetNW2Bool("fin3_lowpass", nil)
         ent:SetNW2Bool("fin3_liftVector", nil)
         ent:SetNW2Bool("fin3_dragVector", nil)

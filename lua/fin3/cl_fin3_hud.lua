@@ -1,6 +1,7 @@
 local fins = {}
 local propellers = {}
 
+local fin3Models = Fin3.models
 local sqrt, abs, max = math.sqrt, math.abs, math.max
 local sin, cos, deg2rad = math.sin, math.cos, math.pi / 180
 local setFont, getTextSize = surface.SetFont, surface.GetTextSize
@@ -14,8 +15,8 @@ local allowedClasses, localToWorldVector = Fin3.allowedClasses, Fin3.localToWorl
 local getPhrase = language.GetPhrase
 
 local cvarShowVectors = GetConVar("fin3_debug_showvectors")
-local cvarShowForces = GetConVar("fin3_debug_showforces")
-local cvarPropellerShowForces = GetConVar("fin3_propeller_debug_showforces")
+local cvarShowData = GetConVar("fin3_debug_showdata")
+local cvarPropellerShowData = GetConVar("fin3_propeller_debug_showdata")
 
 local RED, GREEN, LIGHTBLUE = Color(255, 0, 0), Color(0, 255, 0), Color(0, 255, 255)
 local BACKGROUND = Color(0, 0, 0, 230)
@@ -77,9 +78,9 @@ end
 
 local function drawDebugInfo()
     local showVectors = cvarShowVectors:GetBool()
-    local showForces = cvarShowForces:GetBool()
+    local showData = cvarShowData:GetBool()
 
-    if showVectors or showForces then
+    if showVectors or showData then
         for index in pairs(fins) do
             local fin = Entity(index)
 
@@ -107,15 +108,16 @@ local function drawDebugInfo()
                     end
                 end
 
-                if showForces and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
+                if showData and fin:GetPos():DistToSqr(LocalPlayer():GetPos()) < 400000 then
                     local screenPos = finPos:ToScreen()
 
                     local liftVector = fin:GetNW2Vector("fin3_liftVector", vector_origin)
                     local dragVector = fin:GetNW2Vector("fin3_dragVector", vector_origin)
                     local liftForceStr = getForceString(liftVector:Length())
                     local dragForceStr = getForceString(dragVector:Length())
+                    local AoA = fin:GetNW2Float("fin3_aoa", 0)
 
-                    local text = format("Lift: %s\nDrag: %s", liftForceStr, dragForceStr)
+                    local text = format("Lift: %s\nDrag: %s\nAoA: %.1f°", liftForceStr, dragForceStr, AoA)
                     setFont("Trebuchet18")
                     local textWidth, textHeight = getTextSize(text)
                     textWidth = textWidth + 10
@@ -187,7 +189,7 @@ local function drawFin3Hud(localPly)
 
     local setUpAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_upAxis", vector_origin))
     local setForwardAxis = localToWorldVector(ent, ent:GetNW2Vector("fin3_forwardAxis", vector_origin))
-    local zeroLiftAngle = ent:GetNW2Float("fin3_zeroLiftAngle", 0)
+    local camber = ent:GetNW2Float("fin3_camber", 0)
     local efficiency = ent:GetNW2Float("fin3_efficiency", 0)
     local surfaceArea = ent:GetNW2Float("fin3_surfaceArea", 0)
     local aspectRatio = ent:GetNW2Float("fin3_aspectRatio", 0)
@@ -212,7 +214,7 @@ local function drawFin3Hud(localPly)
 
     local text = format("Airfoil Type: %s\n%sEfficiency: %.2fx\nEffective Surface Area: %.2fm²\nAspect Ratio: %.2f\nInduced Drag: %.2fx",
         getPhrase("tool.fin3.fintype." .. finType),
-        zeroLiftAngle ~= 0 and format("Zero Lift Angle: -%.1f°\n", zeroLiftAngle) or "",
+        fin3Models[finType].canCamber and format(getPhrase("tool.fin3.camber") .. ": %d%%\n", camber) or "",
         efficiency,
         surfaceArea * efficiency,
         aspectRatio,
@@ -238,9 +240,9 @@ local rpmAvgs = {}
 local torqueAvgs = {}
 
 local function drawPropellerDebugInfo()
-    local showForces = cvarPropellerShowForces:GetBool()
+    local showData = cvarPropellerShowData:GetBool()
 
-    if showForces then
+    if showData then
         for index in pairs(propellers) do
             local propeller = Entity(index)
 

@@ -322,7 +322,7 @@ function Fin3.fin:calcDragForceNewtons()
 
     local drag = 0.5 * dragCoef * Fin3.airDensity * self.surfaceArea * self.velMsSqr * self.efficiency
 
-    self.dragForceNewtons = self.disableLowPass and (self.lastDragForceNewtons * 0.6 + drag * 0.4) or drag
+    self.dragForceNewtons = self.disableLowPass and drag or (self.lastDragForceNewtons * 0.6 + drag * 0.4)
     self.lastDragForceNewtons = self.dragForceNewtons
 end
 

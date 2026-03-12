@@ -58,7 +58,7 @@ function TOOL:RightClick(trace)
         local owner = self:GetOwner()
         owner:ConCommand("fin3_propeller_bladecount " .. propeller.bladeCount)
         owner:ConCommand("fin3_propeller_diameter " .. propeller.diameter)
-        owner:ConCommand("fin3_propeller_bladepitch " .. propeller.bladePitch)
+        owner:ConCommand("fin3_propeller_bladepitch " .. math.abs(propeller.bladePitch))
         owner:ConCommand("fin3_propeller_invert " .. (propeller.invertRotation and 1 or 0))
     end
 

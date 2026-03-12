@@ -1,5 +1,5 @@
 local deg, rad, asin, cos, abs, sign, pi = math.deg, math.rad, math.asin, math.cos, math.abs, Fin3.sign, math.pi
-local min, remap = math.min, math.Remap
+local min, remap, clamp = math.min, math.Remap, math.Clamp
 local localToWorldVector = Fin3.localToWorldVector
 local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
@@ -47,17 +47,21 @@ function Fin3.fin:new(ply, ent, data)
     fin.forwardAxis = data.forwardAxis
     fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
     fin.selfPhys = ent:GetPhysicsObject()
+
     if data.finType == "cambered" or data.finType == "symmetrical" then
         fin.finType = "standard"
     else
         fin.finType = data.finType
     end
+
     if data.zeroLiftAngle then
         fin.camber = data.zeroLiftAngle / 8 * 100
     else
         fin.camber = data.camber or 0
     end
-    fin.efficiency = data.efficiency or data.forceMultiplier -- Account for old versions
+    fin.camber = clamp(fin.camber, 0, 100)
+
+    fin.efficiency = clamp(data.efficiency or data.forceMultiplier, 0.1, 1.5) -- Account for old versions
 
     if data.inducedDrag == nil then
         fin.inducedDrag = 1
@@ -65,7 +69,7 @@ function Fin3.fin:new(ply, ent, data)
         if isbool(data.inducedDrag) then
             fin.inducedDrag = data.inducedDrag and 1 or 0
         else
-            fin.inducedDrag = data.inducedDrag
+            fin.inducedDrag = clamp(data.inducedDrag, 0, 1)
         end
     end
 
@@ -375,9 +379,9 @@ function Fin3.fin:remove()
         ent:SetNW2Float("fin3_inducedDrag", nil)
         ent:SetNW2Float("fin3_aoa", nil)
         ent:SetNW2Bool("fin3_disableLowPass", nil)
-        ent:SetNW2Bool("fin3_liftVector", nil)
-        ent:SetNW2Bool("fin3_dragVector", nil)
-        ent:SetNW2Bool("fin3_sweepAngle", nil)
+        ent:SetNW2Vector("fin3_liftVector", nil)
+        ent:SetNW2Vector("fin3_dragVector", nil)
+        ent:SetNW2Float("fin3_sweepAngle", nil)
 
         if IsValid(self.rootPhys) then
             self.rootPhys:EnableDrag(true)

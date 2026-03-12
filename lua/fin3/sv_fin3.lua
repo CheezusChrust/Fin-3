@@ -339,6 +339,10 @@ function Fin3.fin:think()
         self.ent:SetNW2Vector("fin3_liftVector", vector_origin)
         self.ent:SetNW2Vector("fin3_dragVector", vector_origin)
 
+        self.lastPos = self.ent:LocalToWorld(self.massCenter)
+        self.lastLiftForceNewtons = 0
+        self.lastDragForceNewtons = 0
+
         return
     end
 

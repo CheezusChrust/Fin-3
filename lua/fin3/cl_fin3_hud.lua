@@ -296,11 +296,9 @@ local function drawFin3PropellerHud(localPly)
 
     local centerPos = ent:LocalToWorld(ent:OBBCenter())
     local forward = ent:GetNW2Vector("fin3_propeller_forwardAxis", vector_origin)
-    local worldForward = localToWorldVector(ent, forward)
     local diameter = ent:GetNW2Float("fin3_propeller_diameter", 0)
     local bladeCount = ent:GetNW2Int("fin3_propeller_bladeCount", 0)
     local invertRotation = ent:GetNW2Bool("fin3_propeller_invertRotation", false)
-
     local hasPropeller = forward ~= vector_origin
 
     if not hasPropeller then
@@ -311,7 +309,6 @@ local function drawFin3PropellerHud(localPly)
     end
 
     local worldForward = localToWorldVector(ent, forward)
-
     local radiusUnits = diameter * 39.3701 / 2
 
     local v

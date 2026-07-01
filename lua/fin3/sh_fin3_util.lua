@@ -90,7 +90,7 @@ if SERVER then
 
     -- https://github.com/Facepunch/garrysmod-issues/issues/5159
     local m_in_sq = 1 / 39.37 ^ 2 -- in^2 to m^2
-    local const = m_in_sq * 360 / (2 * 3.1416)
+    local const = m_in_sq * 360 / (2 * pi)
     function Fin3.applyForceOffsetFixed(phys, force, pos)
         phys:ApplyForceCenter(force)
 

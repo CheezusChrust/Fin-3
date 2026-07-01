@@ -271,15 +271,24 @@ function Fin3.fin:calcLiftForceNewtons()
             local zeroLiftAngle = camber * 0.08
             AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
 
-            if AoAFinal < 0 then
-                negativeAoACoefPenalty = camber / 100 * curModel.negativeAoACamberPeakLiftCoefPenalty
-                stallAngleMod = -camber / 100 * curModel.negativeAoACamberPeakStallAnglePenalty
-            else
-                stallAngleMod = camber / 100 * curModel.positiveAoACamberStallAngleBonus
+            if not curModel.customLiftCoef then
+                if AoAFinal < 0 then
+                    negativeAoACoefPenalty = camber / 100 * curModel.negativeAoACamberPeakLiftCoefPenalty
+                    stallAngleMod = -camber / 100 * curModel.negativeAoACamberPeakStallAnglePenalty
+                else
+                    stallAngleMod = camber / 100 * curModel.positiveAoACamberStallAngleBonus
+                end
             end
         end
 
-        local liftCoefForward = Fin3.calcLiftCoef(abs(AoAFinal), curModel.stallAngle + stallAngleMod, curModel.liftCoefPeakPreStall - negativeAoACoefPenalty, curModel.liftCoefPeakPostStall)
+        local liftCoefForward
+
+        if curModel.customLiftCoef then
+            liftCoefForward = curModel.customLiftCoef(AoAFinal)
+        else
+            liftCoefForward = Fin3.calcLiftCoef(abs(AoAFinal), curModel.stallAngle + stallAngleMod, curModel.liftCoefPeakPreStall - negativeAoACoefPenalty, curModel.liftCoefPeakPostStall)
+        end
+
         liftCoefForward = liftCoefForward * sign(AoAFinal)
 
         liftCoef = Lerp(fwdVelRatio, liftCoefFlat, liftCoefForward)
@@ -315,7 +324,13 @@ function Fin3.fin:calcDragForceNewtons()
         local zeroLiftAngle = self.camber * 0.08
         local AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
 
-        local dragCoefForward = Fin3.calcDragCoef(abs(AoAFinal), curModel.stallAngle, curModel.dragCoefPeakPreStall, curModel.dragCoefPeakPostStall)
+        local dragCoefForward
+
+        if curModel.customDragCoef then
+            dragCoefForward = curModel.customDragCoef(AoAFinal)
+        else
+            dragCoefForward = Fin3.calcDragCoef(abs(AoAFinal), curModel.stallAngle, curModel.dragCoefPeakPreStall, curModel.dragCoefPeakPostStall)
+        end
 
         dragCoef = abs((dragCoefForward * fwdVelRatio) + (dragCoefFlat * (1 - fwdVelRatio)))
     else

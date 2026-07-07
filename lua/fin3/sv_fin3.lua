@@ -284,7 +284,7 @@ function Fin3.fin:calcLiftForceNewtons()
         local liftCoefForward
 
         if curModel.customLiftCoef then
-            liftCoefForward = curModel.customLiftCoef(AoAFinal)
+            liftCoefForward = curModel.customLiftCoef(abs(AoAFinal))
         else
             liftCoefForward = Fin3.calcLiftCoef(abs(AoAFinal), curModel.stallAngle + stallAngleMod, curModel.liftCoefPeakPreStall - negativeAoACoefPenalty, curModel.liftCoefPeakPostStall)
         end
@@ -327,7 +327,7 @@ function Fin3.fin:calcDragForceNewtons()
         local dragCoefForward
 
         if curModel.customDragCoef then
-            dragCoefForward = curModel.customDragCoef(AoAFinal)
+            dragCoefForward = curModel.customDragCoef(abs(AoAFinal))
         else
             dragCoefForward = Fin3.calcDragCoef(abs(AoAFinal), curModel.stallAngle, curModel.dragCoefPeakPreStall, curModel.dragCoefPeakPostStall)
         end

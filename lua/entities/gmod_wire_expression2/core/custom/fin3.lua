@@ -26,6 +26,7 @@ do
         fin.camber = camber
     end
 
+    [nodiscard]
     e2function number entity:fin3GetCamber()
         local fin = Fin3.fins[this]
         if not IsValid(this) or not fin then return 0 end

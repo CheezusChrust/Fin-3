@@ -13,6 +13,27 @@ do
 
         return fin.angleOfAttack
     end
+
+    e2function void entity:fin3SetCamber(number camber)
+        local fin = Fin3.fins[this]
+        if not IsValid(this) or not fin then return end
+        local finType = Fin3.fins[this].finType
+        if not Fin3.models[finType].canCamber then return end
+
+        camber = clamp(camber, 0, 100)
+
+        fin.ent:SetNW2Float("fin3_camber", camber)
+        fin.camber = camber
+    end
+
+    e2function number entity:fin3GetCamber()
+        local fin = Fin3.fins[this]
+        if not IsValid(this) or not fin then return 0 end
+        local finType = Fin3.fins[this].finType
+        if not Fin3.models[finType].canCamber then return 0 end
+
+        return fin.camber
+    end
 end
 
 -- Propeller functions

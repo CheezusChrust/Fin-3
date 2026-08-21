@@ -20,9 +20,39 @@ do
     -- @return number Angle of attack, in degrees
     function ents_methods:fin3GetAngleOfAttack()
         local fin = Fin3.fins[unwrap(self)]
-        if not fin then return 0 end
+        if not fin then SF.Throw("Entity is not a valid Fin 3 fin", 2) end
 
         return fin.angleOfAttack
+    end
+
+    --- Sets the camber of a Fin 3 fin, good for simulating flaps and slats
+    -- @server
+    -- @param camber number Camber of the fin, in percent
+    function ents_methods:fin3SetCamber(camber)
+        checkluatype(camber, TYPE_NUMBER)
+        local this = unwrap(self)
+        local fin = Fin3.fins[this]
+        if not fin then SF.Throw("Entity is not a valid Fin 3 fin", 2) end
+        local finType = Fin3.fins[this].finType
+        if not Fin3.models[finType].canCamber then return end
+
+        camber = clamp(camber, 0, 100)
+
+        this:SetNW2Float("fin3_camber", camber)
+        fin.camber = camber
+    end
+
+    --- Gets the camber of a Fin 3 fin
+    -- @server
+    -- @return number Camber of the fin, in percent
+    function ents_methods:fin3GetCamber()
+        local this = unwrap(self)
+        local fin = Fin3.fins[this]
+        if not fin then SF.Throw("Entity is not a valid Fin 3 fin", 2) end
+        local finType = Fin3.fins[this].finType
+        if not Fin3.models[finType].canCamber then return 0 end
+
+        return fin.camber
     end
 end
 
@@ -35,7 +65,7 @@ do
         checkluatype(pitch, TYPE_NUMBER)
         local this = unwrap(self)
         local propeller = Fin3.propellers[this]
-        if not propeller then return end
+        if not propeller then SF.Throw("Entity is not a valid Fin 3 propeller", 2) end
 
         pitch = clamp(pitch, -90, 90)
 
@@ -53,7 +83,7 @@ do
     -- @return number Blade pitch, in degrees
     function ents_methods:fin3GetBladePitch()
         local propeller = Fin3.propellers[unwrap(self)]
-        if not propeller then return 0 end
+        if not propeller then SF.Throw("Entity is not a valid Fin 3 propeller", 2) end
 
         return propeller.invertRotation and -propeller.bladePitch or propeller.bladePitch
     end
@@ -63,7 +93,7 @@ do
     -- @return number RPM
     function ents_methods:fin3GetPropellerRPM()
         local propeller = Fin3.propellers[unwrap(self)]
-        if not propeller then return 0 end
+        if not propeller then SF.Throw("Entity is not a valid Fin 3 propeller", 2) end
 
         return propeller.invertRotation and -propeller.rpm or propeller.rpm
     end

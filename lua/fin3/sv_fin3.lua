@@ -5,6 +5,7 @@ local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
 local fin3Version = Fin3.version
+local fin3Models = Fin3.models
 local dt = engine.TickInterval()
 
 Fin3.fin = {} -- Fin class
@@ -18,13 +19,31 @@ Fin creation data table structure:
     camber: number [0 - 100]
     efficiency: number [0.1 - 1.5]
     disableLowPass: boolean
+    version: number [fin3Version]
 --]]
+
+-- Validates whether or not the forward and up axis are perpendicular unit vectors
+local function validAxes(upAxis, forwardAxis)
+    if not isvector(upAxis) or not isvector(forwardAxis) then return false end
+    if abs(upAxis:LengthSqr() - 1) > 0.01 or abs(forwardAxis:LengthSqr() - 1) > 0.01 then return false end
+
+    return abs(upAxis:Dot(forwardAxis)) < 0.01
+end
 
 --- Adds a new fin to an entity
 ---@param ply Player Player that created the fin
 ---@param ent Entity Entity to add the fin to
 ---@param data table Fin creation data table
 function Fin3.fin:new(ply, ent, data)
+    local upAxis = data.upAxis
+    local forwardAxis = data.forwardAxis
+
+    if not validAxes(upAxis, forwardAxis) then
+        MsgC(Color(255, 0, 0), "[Fin 3] Blocked fin creation on " .. tostring(ent) .. ": upAxis and forwardAxis must be perpendicular unit vectors.\n")
+
+        return
+    end
+
     if not Fin3.fins[ent] then
         local finLimit = GetConVar("sbox_max_fin3"):GetInt()
         local currentFinCount = Fin3.playerFinCount[ply] or 0
@@ -45,18 +64,22 @@ function Fin3.fin:new(ply, ent, data)
     fin.owner = ply
     fin.version = data.version or fin3Version
     fin.massCenter = ent:GetPhysicsObject():GetMassCenter()
-    fin.upAxis = data.upAxis
-    fin.forwardAxis = data.forwardAxis
-    fin.rightAxis = data.forwardAxis:Cross(data.upAxis)
+    fin.upAxis = upAxis
+    fin.forwardAxis = forwardAxis
+    fin.rightAxis = forwardAxis:Cross(upAxis)
     fin.selfPhys = ent:GetPhysicsObject()
 
     if data.finType == "cambered" or data.finType == "symmetrical" then
         fin.finType = "standard"
     else
-        fin.finType = data.finType
+        if not fin3Models[data.finType] then
+            fin.finType = "standard"
+        else
+            fin.finType = data.finType
+        end
     end
 
-    local maxZeroLiftAngle = Fin3.models[fin.finType].maxCamber or 12
+    local maxZeroLiftAngle = fin3Models[fin.finType].maxCamber or 12
     local legacyMaxZeroLiftAngle = 8 -- Old hardcoded max zero lift angle in degrees, from before camber became model dependent
 
     if data.zeroLiftAngle then
@@ -261,8 +284,8 @@ function Fin3.fin:calcBaseData()
 end
 
 function Fin3.fin:calcLiftForceNewtons()
-    local flatModel = Fin3.models.flat
-    local curModel = Fin3.models[self.finType]
+    local flatModel = fin3Models.flat
+    local curModel = fin3Models[self.finType]
     local liftCoef = 0
     local AoA = self.angleOfAttack
     local liftCoefFlat = Fin3.calcLiftCoef(abs(AoA), flatModel.stallAngle, flatModel.liftCoefPeakPreStall, flatModel.liftCoefPeakPostStall)
@@ -322,8 +345,8 @@ function Fin3.fin:calcLiftForceNewtons()
 end
 
 function Fin3.fin:calcDragForceNewtons()
-    local flatModel = Fin3.models.flat
-    local curModel = Fin3.models[self.finType]
+    local flatModel = fin3Models.flat
+    local curModel = fin3Models[self.finType]
     local dragCoef = 0
     local AoA = self.angleOfAttack
     local dragCoefFlat = Fin3.calcDragCoef(abs(AoA), flatModel.stallAngle, flatModel.dragCoefPeakPreStall, flatModel.dragCoefPeakPostStall)

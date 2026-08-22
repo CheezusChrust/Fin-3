@@ -83,7 +83,8 @@ function TOOL:LeftClick(trace)
                 camber = owner:GetInfoNum("fin3_camber", 0),
                 efficiency = owner:GetInfoNum("fin3_efficiency", 1),
                 inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
-                disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1
+                disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1,
+                version = Fin3.version
             })
 
             return true
@@ -120,7 +121,8 @@ function TOOL:LeftClick(trace)
             camber = owner:GetInfoNum("fin3_camber", 0),
             efficiency = owner:GetInfoNum("fin3_efficiency", 1),
             inducedDrag = owner:GetInfoNum("fin3_induceddrag", 1),
-            disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1
+            disableLowPass = owner:GetInfoNum("fin3_disableLowPass", 0) == 1,
+            version = Fin3.version
         })
 
         self:ClearSelection()
@@ -240,8 +242,14 @@ function TOOL.BuildCPanel(cp)
         camberPanel:AddHelpText("#tool.fin3.camber.info")
         camberPanel.Paint = function() end
 
+        local function calcZeroLiftAngle(camber, finType)
+            local maxCamber = Fin3.models[finType].maxCamber or 12
+
+            return camber / 100 * maxCamber
+        end
+
         local currentCamber = GetConVar("fin3_camber"):GetFloat()
-        local zeroLiftAngleLabel = camberPanel:AddLabel(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", currentCamber * 0.08))
+        local zeroLiftAngleLabel = camberPanel:AddLabel(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", calcZeroLiftAngle(currentCamber, currentFinType)))
         zeroLiftAngleLabel:DockMargin(0, -5, 0, 0)
         zeroLiftAngleLabel:SetVisible(currentCamber ~= 0)
 
@@ -249,7 +257,8 @@ function TOOL.BuildCPanel(cp)
 
         cvars.RemoveChangeCallback("fin3_camber", "fin3_camber_callback")
         cvars.AddChangeCallback("fin3_camber", function(_, _, newCamber)
-            zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", newCamber * 0.08))
+            local finType = GetConVar("fin3_fintype"):GetString()
+            zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", calcZeroLiftAngle(tonumber(newCamber), finType)))
             zeroLiftAngleLabel:SetVisible(newCamber ~= "0")
             zeroLiftAngleLabel:InvalidateParent()
         end, "fin3_camber_callback")
@@ -269,6 +278,7 @@ function TOOL.BuildCPanel(cp)
                 finTypeSelection:SetValue("#tool.fin3.fintype." .. newFinType)
                 finTypeHelpText:SetText("#tool.fin3.fintype." .. newFinType .. ".info")
                 camberPanel:SetVisible(newFinType ~= "flat")
+                zeroLiftAngleLabel:SetText(getPhrase("tool.fin3.zeroliftangle") .. string.format(": -%.1f°", calcZeroLiftAngle(GetConVar("fin3_camber"):GetFloat(), newFinType)))
             end
         end, "fin3_fintype_callback")
     end

@@ -8,6 +8,8 @@ Fin3.allowedClasses = {
     sent_prop2mesh_legacy = true
 }
 
+Fin3.version = 1 -- Just something to have some backwards compatibility, to try to keep old aircraft functioning similarly
+
 if SERVER then
     Fin3.airDensity = 1.225 -- kg/m^3
     Fin3.finEfficiency = 0.9   -- 0.9 is a magic arbitrarily chosen number, sue me

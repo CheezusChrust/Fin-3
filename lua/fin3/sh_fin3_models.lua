@@ -27,6 +27,7 @@ Fin3.models = {
         dragCoefPeakPreStall = 0.05,
         dragCoefPeakPostStall = 1.82,
         canCamber = true,
+        maxCamber = 12, -- Maximum zero-lift angle in degrees, determines how much camber affects lift
 
         -- Values below are multiplied by camber amount - only used if canCamber is true
         negativeAoACamberPeakLiftCoefPenalty = 0.4, -- Lift coefficient penalty for negative AoA
@@ -47,7 +48,8 @@ Fin3.models = {
             return fighterKp_drag * sin(aoaRad) ^ 3 * cos(aoaRad) + fighterKv_drag * sin(aoaRad) ^ 3
         end,
 
-        canCamber = true
+        canCamber = true,
+        maxCamber = 12
     },
 
     propeller = {

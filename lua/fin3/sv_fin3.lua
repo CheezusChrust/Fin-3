@@ -4,6 +4,7 @@ local localToWorldVector = Fin3.localToWorldVector
 local roundVectorToAxis = Fin3.roundVectorToAxis
 local applyForceOffsetFixed = Fin3.applyForceOffsetFixed
 local getRootParent = Fin3.getRootParent
+local fin3Version = Fin3.version
 local dt = engine.TickInterval()
 
 Fin3.fin = {} -- Fin class
@@ -42,6 +43,7 @@ function Fin3.fin:new(ply, ent, data)
 
     fin.ent = ent
     fin.owner = ply
+    fin.version = data.version or fin3Version
     fin.massCenter = ent:GetPhysicsObject():GetMassCenter()
     fin.upAxis = data.upAxis
     fin.forwardAxis = data.forwardAxis
@@ -54,12 +56,20 @@ function Fin3.fin:new(ply, ent, data)
         fin.finType = data.finType
     end
 
+    local maxZeroLiftAngle = Fin3.models[fin.finType].maxCamber or 12
+    local legacyMaxZeroLiftAngle = 8 -- Old hardcoded max zero lift angle in degrees, from before camber became model dependent
+
     if data.zeroLiftAngle then
-        fin.camber = data.zeroLiftAngle / 8 * 100
+        -- First fin version directly used zeroLiftAngle
+        fin.camber = data.zeroLiftAngle / maxZeroLiftAngle * 100
+    elseif not data.version then
+        -- Then it was 0-100, but the maximum zero lift angle was hardcoded to 8
+        fin.camber = (data.camber or 0) * legacyMaxZeroLiftAngle / maxZeroLiftAngle
     else
         fin.camber = data.camber or 0
     end
     fin.camber = clamp(fin.camber, 0, 100)
+    data.version = fin3Version
 
     fin.efficiency = clamp(data.efficiency or data.forceMultiplier, 0.1, 1.5) -- Account for old versions
 
@@ -268,7 +278,7 @@ function Fin3.fin:calcLiftForceNewtons()
 
         if curModel.canCamber then
             local camber = self.camber
-            local zeroLiftAngle = camber * 0.08
+            local zeroLiftAngle = camber / 100 * curModel.maxCamber
             AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
 
             if not curModel.customLiftCoef then
@@ -321,7 +331,7 @@ function Fin3.fin:calcDragForceNewtons()
     if self.forwardVel > 0 and self.finType ~= "flat" then
         local fwdVelRatio = self.fwdVelRatio
 
-        local zeroLiftAngle = self.camber * 0.08
+        local zeroLiftAngle = curModel.canCamber and (self.camber / 100 * curModel.maxCamber) or 0
         local AoAFinal = (AoA + zeroLiftAngle + 90) % 180 - 90
 
         local dragCoefForward

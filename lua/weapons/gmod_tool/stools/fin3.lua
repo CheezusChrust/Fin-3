@@ -45,8 +45,9 @@ end
 function TOOL:LeftClick(trace)
     local ent = trace.Entity
     local owner = self:GetOwner()
+    local stage = self:GetStage()
 
-    if owner:KeyDown(IN_SPEED) and IsValid(ent) then
+    if stage == 0 and owner:KeyDown(IN_SPEED) and IsValid(ent) then
         if SERVER and CFW then
             local centerOfLift = Fin3.calcCenterOfLift(ent:GetContraption() or ent)
 
@@ -65,8 +66,6 @@ function TOOL:LeftClick(trace)
 
         return true
     end
-
-    local stage = self:GetStage()
 
     if stage == 0 and (not IsValid(ent) or not Fin3.allowedClasses[ent:GetClass()]) then
         return false
